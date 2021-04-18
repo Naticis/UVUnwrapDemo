@@ -144,16 +144,10 @@ public class maxCamera : MonoBehaviour
 		if(!hitsomething2)
 			if(Input.GetMouseButtonDown(0))
 		{
-                //APARaycastHit [] hitcurV2=APARaycast.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition),Mathf.Infinity,Dynamiclayer);
-                //if(!hitsomething)
-                //	if(hitcurV2.Length>0)
-                Sculptlayer = 1 << LayerMask.NameToLayer("sculpt");
-               // if (APARaycast.Raycast (ray, out apahit,Sculptlayer))
-                    if (Physics.Raycast(ray, out hit, Mathf.Infinity, Sculptlayer))
+              
+                    if (Physics.Raycast(ray, out hit, Mathf.Infinity))
                     {
-			//	Debug.Log("apahit something "+hitcurV2[0].transform.gameObject.name+" "+hitcurV2[0].transform.gameObject.layer);
-					//Debug.Log("apahit something "+apahit.transform.gameObject.name+" "+apahit.transform.gameObject.layer);
-					//EtceteraAndroid.showToast( "hit something", true );
+
 				hitsomething=true;
 				rotating=false;
 				rotateindicator=false;
@@ -167,71 +161,24 @@ public class maxCamera : MonoBehaviour
 				rotateindicator=true;
 				
 			}
-			/*
-			if(!hitsomething)
-			if (Physics.Raycast (ray, out hit,Mathf.Infinity,Dynamiclayer)) {
-				Debug.Log("hit something "+hit.transform.gameObject.name+" "+hit.transform.gameObject.layer);
-				//EtceteraAndroid.showToast( "hit something", true );
-				hitsomething=true;
-				rotating=false;
-				rotateindicator=false;
-				PaintVerts.ignoringRaycast=false;
-			}
-		else
-		{
-		
-				hitsomething=false;
-				rotating=true;
-				rotateindicator=true;
-				PaintVerts.ignoringRaycast=true;
-		}*/
-			if(!hitsomething)
-			if (Physics.Raycast (ray, out hit2,Mathf.Infinity,AntiDynamiclayer)) {
-				Debug.Log("hit2 something "+hit2.transform.gameObject.name+" "+hit2.transform.gameObject.layer);
-				//EtceteraAndroid.showToast( "hit something", true );
-				//hitsomething=true;
-				//tating=false;
-			}
+	
 
 
 		}
 		
 	
 	}
-	/*
-     * Camera logic on LateUpdate to only update after all character movement logic has been handled. 
-     */
+	
 	void LateUpdate()
 	{
 
         if (IsOverUI)
             return;
 
-  
+        if (hitsomething)
+            return;
 
-		//var bottommenu=new Rect (0,Screen.height-(Screen.height*0.9f), Screen.width, Screen.height*0.2f);
-		//var texturemenu=new Rect (Screen.width*.2f,Screen.height-(Screen.height*0.6f), Screen.width*.2f, Screen.height*.5f);
-		//var findmenu=new Rect (Screen.width*.2f, Screen.height-(Screen.height*0.6f), Screen.width*.6f,Screen.height*.5f);
-
-
-
-
-		/*if(bottommenu.Contains(Input.mousePosition) && MainGui.instaobjects)
-		{
-			PaintVerts.ignoringRaycast=true;
-			return;
-		}
-
-		if(texturemenu.Contains(Input.mousePosition) && MainGui.texturewall)
-		{
-			PaintVerts.ignoringRaycast=true;
-			return;
-		}
-		if(findmenu.Contains(Input.mousePosition) && MainGui.findobjects)
-		{
-			PaintVerts.ignoringRaycast=true;
-			return;
-		}*/
+	
 		if(reset)
 		{
 			Init ();
@@ -305,9 +252,9 @@ public class maxCamera : MonoBehaviour
 				//xDeg += rotatespeed*touchDeltaPosition.x * 5f* 0.02f; 
 				//yDeg -= rotatespeed*touchDeltaPosition.y * 5f * 0.02f; 
 				
-				xDeg += touchDeltaPosition.x * 60f *0.07f*Time.deltaTime;
+				xDeg += touchDeltaPosition.x * 60f *0.7f*Time.deltaTime;
 				
-				yDeg -= touchDeltaPosition.y* 30f *0.08f*Time.deltaTime;
+				yDeg -= touchDeltaPosition.y* 30f *0.8f*Time.deltaTime;
 
 			//xDeg += Input.GetAxis("Mouse X") * xSpeed * 0.02f;
 			//yDeg -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;

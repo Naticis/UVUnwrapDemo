@@ -5,9 +5,10 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MeshPainter : MonoBehaviour {
+    private Vector2 vector1;
 
-	// Use this for initialization
-	public static Texture2D baseTex;
+    // Use this for initialization
+    public static Texture2D baseTex;
 	public static Texture2D undo;
 	public static bool textureToggle;
 	public static Texture2D currentTexture;
@@ -19,17 +20,81 @@ public static Vector2 dragEnd;
 	public static int lastTriangleIndex;
 	public Camera cam;
 	private GameObject tempObject;
-
-
-	void Start () {
-	
+    private Vector2 pixelUV;
+    private Vector2 previous;
+    private RaycastHit hit;
+    private Texture2D tex;
+    private float paintradius;
+    private float radius;
+    void Start () {
+        radius = 0.1f;
 	}
+   
+    // Update is called once per frame
+    void Update()
+    {
 
-	// Update is called once per frame
-	void Update () {
-	
-	}
-	public static float LogarithmicSlider(float position, float minIn, float maxIn, float minOut, float maxOut)
+        if (maxCamera.rotateindicator)
+            return;
+
+        if (!Input.GetMouseButton(0))
+        {
+            previous = Vector2.zero;
+            vector1 = Vector2.zero;
+
+            return;
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            tex = (Texture2D)hit.transform.gameObject.GetComponent<Renderer>().material.mainTexture;
+
+        }
+            if (Input.GetMouseButtonDown(0))
+        {
+           
+          
+          
+                pixelUV = Vector2.zero;//= hit.textureCoord;
+                pixelUV.x = Mathf.Abs((hit.textureCoord.x - Mathf.Floor(hit.textureCoord.x)));
+                pixelUV.y = Mathf.Abs((hit.textureCoord.y - Mathf.Floor(hit.textureCoord.y)));
+                pixelUV.x *= (float)tex.width;
+                pixelUV.y *= (float)tex.height;
+                vector1 = pixelUV;
+                paintradius = tex.width * radius * radius;
+                      baseTex = tex;
+
+                Brush(vector1, previous, tex, paintradius, 50f, Color.green);
+            
+
+        }
+        else if (Input.GetMouseButton(0))
+        {
+            pixelUV.x = Mathf.Abs((hit.textureCoord.x - Mathf.Floor(hit.textureCoord.x)));
+            pixelUV.y = Mathf.Abs((hit.textureCoord.y - Mathf.Floor(hit.textureCoord.y)));
+            pixelUV.x *= (float)tex.width;
+            pixelUV.y *= (float)tex.height;
+            vector1 = pixelUV;
+
+            baseTex = tex;
+
+            Brush(vector1, previous, tex, paintradius, 50f, Color.green);
+            previous = vector1;
+
+        } else if (Input.GetMouseButtonUp(0))
+        {
+            previous = Vector2.zero;
+            vector1 = Vector2.zero;
+        }
+    }
+
+ public void SetRadius(float value)
+    {
+        radius = value;
+    }
+
+    public static float LogarithmicSlider(float position, float minIn, float maxIn, float minOut, float maxOut)
 	{
 		float num = minIn;
 		float num2 = maxIn;
@@ -40,6 +105,8 @@ public static Vector2 dragEnd;
 	
 	public static void Brush(Vector2 p1, Vector2 p2, Texture2D currentTexture, float width,float hardness,Color color1 )
 	{
+
+
 		//Drawing.NumSamples = this.AntiAlias;
 		if (p2 == Vector2.zero)
 		{
@@ -105,14 +172,11 @@ public static Vector2 dragEnd;
 					sqrMagnitude = GaussFalloff(Mathf.Sqrt(sqrMagnitude), rad) * hardness;
 					if (sqrMagnitude > 0f)
 					{
-						if (textureToggle)
-						{
-							color = Color.Lerp(colors[(i * blockWidth) + j], colorArray2[(i * blockWidth) + j], sqrMagnitude);
-						}
-						else
-						{
+
+                   
+
 							color = Color.Lerp(colors[(i * blockWidth) + j], col, sqrMagnitude);
-						}
+						
 					}
 					else
 					{

@@ -20,17 +20,27 @@ public static Vector2[] tricounter;
 	public static Texture2D texsize;
 public static List<int> list = new List<int>();
 
+    public Texture2D swapTex;
+    public Texture2D uvTex;
+
     public GameObject gameObject;
+    public GameObject go;
     public Mesh GameObjectMesh;
     public Vector2[] origUV;
+
+    private bool ux;
+    private bool uy;
+    private bool uz;
+    private bool switchTex;
     // Use this for initialization
     void Start () {
-       var go= Instantiate(gameObject, Vector3.zero,Quaternion.identity);
+       go= Instantiate(gameObject, Vector3.zero,Quaternion.identity);
         GameObjectMesh = go.GetComponent<MeshFilter>().mesh;
         maxCamera.target = go.transform;
 
         origUV = GameObjectMesh.uv;
-
+        uy = true;
+        go.transform.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
     }
 	
 	public static void Unwrap(Mesh mesh)
@@ -42,17 +52,29 @@ public static List<int> list = new List<int>();
 	
 	public static Vector2[] UnwrapUVs(Mesh mesh)
 {//create new unwrapping
-		//Unwrapping testuv = new Unwrapping();
-   Vector2[] vectorArray = UnityEditor.Unwrapping.GeneratePerTriangleUV(mesh);
+ //Unwrapping testuv = new Unwrapping();
+#if UNITY_EDITOR
+        Vector2[] vectorArray = UnityEditor.Unwrapping.GeneratePerTriangleUV(mesh);
   	 Vector2[] triUV = UnityEditor.Unwrapping.GeneratePerTriangleUV(mesh);
         UnityEditor.MeshUtility.SetPerTriangleUV2(mesh, triUV);
-    return mesh.uv2;
+#endif
+        return mesh.uv2;
 	}
  
+    public void SwapTex()
+    {
+        switchTex = !switchTex;
+
+        if(switchTex)
+       go.transform.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(swapTex);
+        else
+            go.transform.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
+
+    }
 
         public void MakeSphere()
     {
-        MakeSpherical(GameObjectMesh, 2f, true,false, false);
+        MakeSpherical(GameObjectMesh, 2f, ux,uy, uz);
 
         }
 
@@ -60,12 +82,14 @@ public static List<int> list = new List<int>();
     {
         Unwrap(GameObjectMesh);
         //This will break the OrigUV array
+        UpdateMesh();
     }
 
     public void RestoreOriginal()
     {
        var backup = origUV;
         GameObjectMesh.uv = backup;
+        UpdateMesh();
     }
 
     public static void MakeCubic(Mesh mesh, Vector3 box)
@@ -114,7 +138,31 @@ public static List<int> list = new List<int>();
     mesh.uv = uv;
 }
 
-public static void MakeCubicNew(Mesh mesh)
+    public void UpdateMesh()
+    {
+
+        go.GetComponent<MeshCollider>().sharedMesh = GameObjectMesh;
+
+      
+    }
+
+    public void ToggleX(bool newvalue)
+    {
+        ux = newvalue;
+    }
+
+    public void ToggleY(bool newvalue)
+    {
+        uy = newvalue;
+    }
+
+    public void ToggleZ(bool newvalue)
+    {
+        uz = newvalue;
+    }
+
+
+    public static void MakeCubicNew(Mesh mesh)
 {
    //  List<int> list = new List<int>();
     Vector2[] uv = mesh.uv;
@@ -341,10 +389,10 @@ uv[num].y=t;
  
 
 
- public static void MakeSpherical(Mesh mesh, float r, bool ux, bool uy, bool uz)
+ public void MakeSpherical(Mesh mesh, float r, bool ux, bool uy, bool uz)
 {
     int num;
-  //  List<int> list = new List<int>();
+ 
     Vector2[] uv = mesh.uv;
 		int[] triangles = mesh.triangles;
 		Vector3[] normals = mesh.normals;
@@ -359,7 +407,7 @@ uv[num].y=t;
     {
         for (num = 0; num < mesh.vertices.Length; num++)
         { 
-				//Rv = vertices[num];//(2*Vector3.Dot(normals[num],vertices[num])*normals[num]) - vertices[num];
+
 				r=Mathf.Sqrt((vertices[num].x*vertices[num].x)+(vertices[num].y*vertices[num].y)+(vertices[num].z*vertices[num].z));
 				if(ux)
             uv[num] = new Vector2((Mathf.Atan2(mesh.vertices[num].z / r, mesh.vertices[num].y / r) / 3.141593f) / 2f, Mathf.Acos(mesh.vertices[num].x / r) / 3.141593f);
@@ -369,12 +417,7 @@ uv[num].y=t;
 				
 					if(uz)
             uv[num] = new Vector2((Mathf.Atan2(mesh.vertices[num].y / r, mesh.vertices[num].x / r) / 3.141593f) / 2f, Mathf.Acos(mesh.vertices[num].z / r) / 3.141593f);
-				// uv[num].x=Mathf.Acos(vertices[num].z/r);
-			//	 uv[num].y=Mathf.Atan(vertices[num].y/vertices[num].x);
-				//var ma=2*(Mathf.Sqrt(Mathf.Pow(Rv.x,2)+Mathf.Pow(Rv.y,2)+Mathf.Pow((Rv.z+1),2)));
-			//uv[num].x=(Rv.x/ma)+(1/2);
-			//uv[num].y=(Rv.y/ma)+(1/2);	
-				//uv[num].x=Mathf.Pow(
+
 			}
     }
     else
@@ -390,10 +433,10 @@ uv[num].y=t;
         }
     }
 		
-	//for (int k=0;k<uv.Length;k++)
-		//	uv[k]=new Vector2(uv[k].x/texsize.width,uv[k].y/texsize.height);
+
 		
     mesh.uv = uv;
+        UpdateMesh();
 }
 
 public static void ScaleUV(Mesh mesh, float posx, float posy)
