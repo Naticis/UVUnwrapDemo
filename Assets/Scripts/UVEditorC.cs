@@ -22,11 +22,14 @@ public static List<int> list = new List<int>();
 
     public GameObject gameObject;
     public Mesh GameObjectMesh;
+    public Vector2[] origUV;
     // Use this for initialization
     void Start () {
        var go= Instantiate(gameObject, Vector3.zero,Quaternion.identity);
         GameObjectMesh = go.GetComponent<MeshFilter>().mesh;
         maxCamera.target = go.transform;
+
+        origUV = GameObjectMesh.uv;
 
     }
 	
@@ -56,7 +59,13 @@ public static List<int> list = new List<int>();
     public void UnityUnwrap()
     {
         Unwrap(GameObjectMesh);
+        //This will break the OrigUV array
+    }
 
+    public void RestoreOriginal()
+    {
+       var backup = origUV;
+        GameObjectMesh.uv = backup;
     }
 
     public static void MakeCubic(Mesh mesh, Vector3 box)
