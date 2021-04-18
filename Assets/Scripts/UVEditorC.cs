@@ -22,7 +22,7 @@ public static List<int> list = new List<int>();
 
     public Texture2D swapTex;
     public Texture2D uvTex;
-
+    public Material uvmat;
     public GameObject gameObject;
     public GameObject go;
     public Mesh GameObjectMesh;
@@ -35,12 +35,53 @@ public static List<int> list = new List<int>();
     // Use this for initialization
     void Start () {
        go= Instantiate(gameObject, Vector3.zero,Quaternion.identity);
-        GameObjectMesh = go.GetComponent<MeshFilter>().mesh;
+        
         maxCamera.target = go.transform;
-
-        origUV = GameObjectMesh.uv;
+       
         uy = true;
-        go.transform.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
+
+
+        PrepareForpainting(go);
+
+    }
+
+    public void PrepareForpainting(GameObject gotopaint)
+    {
+        /*
+        if(gotopaint.transform.childCount==0)
+        {
+            gotopaint.AddComponent<MeshFilter>();
+            gotopaint.AddComponent<MeshRenderer>();
+            gotopaint.AddComponent<MeshCollider>();
+
+            gotopaint.GetComponent<Renderer>().material = uvmat;
+            gotopaint.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
+
+            GameObjectMesh = gotopaint.GetComponent<MeshFilter>().mesh;
+            origUV = GameObjectMesh.uv;
+            gotopaint.GetComponent<MeshCollider>().sharedMesh = GameObjectMesh;
+
+        }*/
+
+
+        Transform[] componentsInChildren = gotopaint.GetComponentsInChildren<Transform>();
+        foreach (Transform child in componentsInChildren)
+        {
+
+            child.gameObject.AddComponent<MeshFilter>();
+            child.gameObject.AddComponent<MeshRenderer>();
+
+            var mc=child.gameObject.GetComponent<MeshCollider>();
+            if (!mc)
+                child.gameObject.AddComponent<MeshCollider>();
+
+            child.gameObject.GetComponent<Renderer>().material = uvmat;
+            child.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
+
+            GameObjectMesh = child.gameObject.GetComponent<MeshFilter>().mesh;
+            origUV = GameObjectMesh.uv;
+            child.gameObject.GetComponent<MeshCollider>().sharedMesh = GameObjectMesh;
+        }
     }
 	
 	public static void Unwrap(Mesh mesh)
@@ -64,11 +105,31 @@ public static List<int> list = new List<int>();
     public void SwapTex()
     {
         switchTex = !switchTex;
+        Transform[] componentsInChildren = go.GetComponentsInChildren<Transform>();
 
-        if(switchTex)
-       go.transform.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(swapTex);
+        if (switchTex)
+        {
+            
+
+
+            foreach (Transform child in componentsInChildren)
+            {
+
+                child.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(swapTex);
+
+            }
+        }
         else
-            go.transform.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
+        {
+
+            foreach (Transform child in componentsInChildren)
+            {
+
+                child.gameObject.GetComponent<Renderer>().material.mainTexture = Instantiate(uvTex);
+
+            }
+           
+        }
 
     }
 
