@@ -1,0 +1,11 @@
+
+newmtl newmatcaptest 2021-04-17T172047Z
+Ka 0 0 0
+Kd 0 0 0
+Ks 0 0 0
+Tr 1
+d 0
+Ns  0.0
+illum 2
+map_Kd uv3.png
+map_Ka 636363_AAAAAA_949494_252525.png
