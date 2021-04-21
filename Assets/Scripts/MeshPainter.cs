@@ -49,44 +49,38 @@ public static Vector2 dragEnd;
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
             tex = (Texture2D)hit.transform.gameObject.GetComponent<Renderer>().material.mainTexture;
-
         }
-            if (Input.GetMouseButtonDown(0))
-        {
-           
-          
-          
-                pixelUV = Vector2.zero;//= hit.textureCoord;
-                pixelUV.x = Mathf.Abs((hit.textureCoord.x - Mathf.Floor(hit.textureCoord.x)));
-                pixelUV.y = Mathf.Abs((hit.textureCoord.y - Mathf.Floor(hit.textureCoord.y)));
-                pixelUV.x *= (float)tex.width;
-                pixelUV.y *= (float)tex.height;
-                vector1 = pixelUV;
-                paintradius = tex.width * radius * radius;
-                      baseTex = tex;
+		if (Input.GetMouseButtonDown(0))
+		{
+			pixelUV = Vector2.zero;//= hit.textureCoord;
+			pixelUV.x = Mathf.Abs((hit.textureCoord.x - Mathf.Floor(hit.textureCoord.x)));
+			pixelUV.y = Mathf.Abs((hit.textureCoord.y - Mathf.Floor(hit.textureCoord.y)));
+			pixelUV.x *= (float)tex.width;
+			pixelUV.y *= (float)tex.height;
+			vector1 = pixelUV;
+			paintradius = tex.width * radius * radius;
+			baseTex = tex;
 
-                Brush(vector1, previous, tex, paintradius, 50f, Color.green);
-            
+			Brush(vector1, previous, tex, paintradius, 50f, Color.green);
+		}
+		else if (Input.GetMouseButton(0))
+		{
+			pixelUV.x = Mathf.Abs((hit.textureCoord.x - Mathf.Floor(hit.textureCoord.x)));
+			pixelUV.y = Mathf.Abs((hit.textureCoord.y - Mathf.Floor(hit.textureCoord.y)));
+			pixelUV.x *= (float)tex.width;
+			pixelUV.y *= (float)tex.height;
+			vector1 = pixelUV;
 
-        }
-        else if (Input.GetMouseButton(0))
-        {
-            pixelUV.x = Mathf.Abs((hit.textureCoord.x - Mathf.Floor(hit.textureCoord.x)));
-            pixelUV.y = Mathf.Abs((hit.textureCoord.y - Mathf.Floor(hit.textureCoord.y)));
-            pixelUV.x *= (float)tex.width;
-            pixelUV.y *= (float)tex.height;
-            vector1 = pixelUV;
+			baseTex = tex;
 
-            baseTex = tex;
-
-            Brush(vector1, previous, tex, paintradius, 50f, Color.green);
-            previous = vector1;
-
-        } else if (Input.GetMouseButtonUp(0))
-        {
-            previous = Vector2.zero;
-            vector1 = Vector2.zero;
-        }
+			Brush(vector1, previous, tex, paintradius, 50f, Color.green);
+			previous = vector1;
+		}
+		else if (Input.GetMouseButtonUp(0))
+		{
+			previous = Vector2.zero;
+			vector1 = Vector2.zero;
+		}
     }
 
  public void SetRadius(float value)

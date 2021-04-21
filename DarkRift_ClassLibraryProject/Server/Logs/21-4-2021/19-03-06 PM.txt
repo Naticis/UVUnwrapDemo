@@ -1,0 +1,17 @@
+[Trace]   DarkRiftServer        System Details:
+                                	OS: Microsoft Windows NT 6.2.9200.0
+                                	CLS Version: 4.0.30319.42000
+                                	DarkRift: 2.6.0.0 - Pro
+[Trace]   pluginFactory         Created plugin 'Unwrapper'.
+[Info]    PluginManager         Installed plugin Unwrapper version 0.0.1
+[Trace]   pluginFactory         Created plugin 'BichannelListener'.
+[Trace]   BadWordFilter         Loading bad word list.
+[Trace]   BadWordFilter         Bad word list loaded sucessfully!
+[Trace]   DefaultNetworkListener Starting bichannel listener.
+[Info]    DefaultNetworkListener Server mounted, listening on port 4296.
+[Trace]   DefaultNetworkListener Accepted TCP connection from 127.0.0.1:55511.
+[Trace]   DefaultNetworkListener Accepted UDP connection from 127.0.0.1:60180.
+[Info]    ClientManager         New client [0] connected [127.0.0.1:55511|127.0.0.1:60180].
+[Trace]   Client                Client received strike of wight 10 for ConnectionRequest: TCP body length was above allowed limits..
+[Info]    ClientManager         Client [0] disconnected.
+[Trace]   Client                Client was disconnected as they accumulated too many strikes.
