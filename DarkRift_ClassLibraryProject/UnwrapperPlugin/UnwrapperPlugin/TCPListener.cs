@@ -21,17 +21,13 @@ namespace UnwrapperPlugin
             Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
             serverSocket.Bind(ipEnd);
 
-            int count = 0;
-
             serverSocket.Listen(3004);
 
             Console.WriteLine("Server started...");
             while (true)
             {
-                count++;
-
                 clientSocket = serverSocket.Accept();
-                Console.WriteLine($"Client Connected. Total :  {count}");
+                Console.WriteLine($"Client Connected.");
 
                 new Thread(delegate ()
                 {
@@ -77,17 +73,13 @@ namespace UnwrapperPlugin
 
         private static void Process_Exited(object sender, EventArgs e)
         {
-            Console.WriteLine("PROCESS ENDED");
+            Console.WriteLine("Unwrap process ended.");
             string fileToSend = AppDomain.CurrentDomain.BaseDirectory + "\\Unwrapped.obj";
             SendFile(fileToSend);
         }
         private static void SendFile(string fn)
         {
             Console.WriteLine($"Trying to send file {fn}");
-            //IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-            //IPEndPoint ipEnd = new IPEndPoint(ipAddress, 3005);
-            //Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
-
             string fileName = fn;// "c:\\filetosend.txt";
             byte[] fileNameByte = Encoding.ASCII.GetBytes(fileName);
             byte[] fileNameLen = BitConverter.GetBytes(fileNameByte.Length);
@@ -97,7 +89,6 @@ namespace UnwrapperPlugin
             fileNameLen.CopyTo(clientData, 0);
             fileNameByte.CopyTo(clientData, 4);
             fileData.CopyTo(clientData, 4 + fileNameByte.Length);
-        //    clientSocket.Connect(ipEnd);
             clientSocket.Send(clientData);
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();

@@ -38,23 +38,29 @@ public class Unwrapper : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            SendObjToServer();
+            RealTimeUnwrap(ObjToSend);
         }
     }
 
-
-
-    private void SendObjToServer()
+    /// <summary>
+    /// Takes the current target, sends it to server, server open blender with python script, unwraps, and send the item back.
+    /// Then spawns it into the scene.
+    /// </summary>
+    public void RealTimeUnwrap(GameObject target)
     {
         fileName = fileDirectory + "\\MeshToFile.obj";
-        ObjExporter.MeshToFile(ObjToSend.GetComponent<MeshFilter>(), fileName);
+        ObjExporter.MeshToFile(target.GetComponent<MeshFilter>(), fileName);
         SendFile(fileName);
     }
 
+    /// <summary>
+    /// Sends file to server
+    /// DarkRift must connect first.
+    /// </summary>
+    /// <param name="fn">File to be sent, with path, name and extension.</param>
     private void SendFile(string fn)
     {
-        //Clear socket - don't ask me why :| 
-        clientSocket = null;
+        Debug.Log("Time: " + Time.realtimeSinceStartup);
         Debug.LogError("Sending file started");
 
         //Connect to server
@@ -82,10 +88,14 @@ public class Unwrapper : MonoBehaviour
         //Send
         clientSocket.Send(clientData);
 
-        GetFile(clientSocket);
+        GetFile();
     }
 
-    public void GetFile(Socket clientSocket)
+    /// <summary>
+    /// Gets file from server.
+    /// Called after sending one.
+    /// </summary>
+    public void GetFile()
     {
         Debug.Log("Getting File...");
         byte[] clientData = new byte[1024 * 5000];
@@ -95,20 +105,22 @@ public class Unwrapper : MonoBehaviour
 
         fileName = fileDirectory + "//" + Path.GetFileName(fileName);
 
+        Debug.Log(Application.persistentDataPath);
+
+        //Write it
         BinaryWriter bWrite = new BinaryWriter(File.Open(fileName, FileMode.Create));
         bWrite.Write(clientData, 4 + fileNameLen, receivedBytesLen - 4 - fileNameLen);
         bWrite.Close();
         Debug.Log($"Saved File At {fileName}");
 
+        //Close Socket
         clientSocket.Shutdown(SocketShutdown.Both);
         clientSocket.Close();
         clientSocket = null;
-        UnityMainThreadDispatcher.Instance().Enqueue(() => LoadObjFromFile(fileName));
-    }
 
-    public void LoadObjFromFile(string filePath)
-    {
-        GameObject loadedObject = new OBJLoader().Load(filePath);
-        Debug.LogError("Loaded object");
+        //Spawn it
+        UnityMainThreadDispatcher.Instance().Enqueue(() => new OBJLoader().Load(fileName));
+
+        Debug.Log("Time: " + Time.realtimeSinceStartup);
     }
 }

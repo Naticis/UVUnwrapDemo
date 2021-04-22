@@ -36,7 +36,6 @@ public class UnityMainThreadDispatcher : MonoBehaviour
     {
         lock (_executionQueue)
         {
-            Debug.Log("Enqueued");
             _executionQueue.Enqueue(() => { StartCoroutine(action); });
         }
     }
