@@ -13,7 +13,7 @@ namespace UnwrapperPlugin
         private static Socket clientSocket;
         public static void Start()
         {
-            IPAddress ipAddress = IPAddress.Parse("192.168.0.102");
+            IPAddress ipAddress = IPAddress.Parse("0.0.0.0");
 
             Console.WriteLine("Starting TCP Listener");
 
