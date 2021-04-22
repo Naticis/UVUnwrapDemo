@@ -105,20 +105,27 @@ public class Unwrapper : MonoBehaviour
         string fileName = Encoding.ASCII.GetString(clientData, 4, fileNameLen);
         Debug.Log("Getting File...");
 
-        fileName = fileDirectory + "/" + Path.GetFileName(fileName);        
+        fileName = fileDirectory + "/Unwrapped.obj";
 
         //Write it
         BinaryWriter bWrite = new BinaryWriter(File.Open(fileName, FileMode.Create));
         bWrite.Write(clientData, 4 + fileNameLen, receivedBytesLen - 4 - fileNameLen);
         bWrite.Close();
         Debug.Log($"Saved File At {fileName}");
-
+        //Spawn it
+        UnityMainThreadDispatcher.Instance().Enqueue(() => SpawnObjFromFile(fileName));
         //Close Socket
-        clientSocket.Shutdown(SocketShutdown.Both);
         clientSocket.Close();
         clientSocket = null;
+    }
 
-        //Spawn it
-        UnityMainThreadDispatcher.Instance().Enqueue(() => new OBJLoader().Load(fileName));
+    private void SpawnObjFromFile(string fileName)
+    {
+        if (!File.Exists(fileName))
+            Debug.LogError("FILE NOT FOUND!");
+
+        //Yap, here the magic happens and has to be rewritten for android :| 
+        new OBJLoader().Load(fileName);
+        Debug.LogError("Spawned from main thread");
     }
 }

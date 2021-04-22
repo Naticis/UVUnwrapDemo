@@ -5,7 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/UVUnwrapDemo.unity
     guid: dbb60c3eb8fa2f04daf04e1c10b07cc3
+  - enabled: 1
+    path: Assets/Module_Unwrapper/Unwrapper.unity
+    guid: 88795574608ad5f4fb88d8bc36109d01
   m_configObjects: {}
