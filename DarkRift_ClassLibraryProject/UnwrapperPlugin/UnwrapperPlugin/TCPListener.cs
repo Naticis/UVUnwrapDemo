@@ -10,6 +10,7 @@ namespace UnwrapperPlugin
 {
     public static class TCPListener
     {
+        private static Socket clientSocket;
         public static void Start()
         {
             IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
@@ -29,16 +30,16 @@ namespace UnwrapperPlugin
             {
                 count++;
 
-                Socket clientSocket = serverSocket.Accept();
+                clientSocket = serverSocket.Accept();
                 Console.WriteLine($"Client Connected. Total :  {count}");
 
                 new Thread(delegate ()
                 {
-                    doChat(clientSocket, count.ToString());
+                    GetFile(clientSocket);
                 }).Start();
             }
         }
-        public static void doChat(Socket clientSocket, string n)
+        public static void GetFile(Socket clientSocket)
         {
             Console.WriteLine("Getting File...");
             byte[] clientData = new byte[1024 * 5000];
@@ -77,15 +78,15 @@ namespace UnwrapperPlugin
         private static void Process_Exited(object sender, EventArgs e)
         {
             Console.WriteLine("PROCESS ENDED");
-            string fileToSend = AppDomain.CurrentDomain.BaseDirectory + "\\output.obj";
+            string fileToSend = AppDomain.CurrentDomain.BaseDirectory + "\\Unwrapped.obj";
             SendFile(fileToSend);
         }
         private static void SendFile(string fn)
         {
             Console.WriteLine($"Trying to send file {fn}");
-            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-            IPEndPoint ipEnd = new IPEndPoint(ipAddress, 3005);
-            Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            //IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
+            //IPEndPoint ipEnd = new IPEndPoint(ipAddress, 3005);
+            //Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
 
             string fileName = fn;// "c:\\filetosend.txt";
             byte[] fileNameByte = Encoding.ASCII.GetBytes(fileName);
@@ -96,8 +97,9 @@ namespace UnwrapperPlugin
             fileNameLen.CopyTo(clientData, 0);
             fileNameByte.CopyTo(clientData, 4);
             fileData.CopyTo(clientData, 4 + fileNameByte.Length);
-            clientSocket.Connect(ipEnd);
+        //    clientSocket.Connect(ipEnd);
             clientSocket.Send(clientData);
+            clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
             Console.WriteLine($"Sent file: {fn}");
 

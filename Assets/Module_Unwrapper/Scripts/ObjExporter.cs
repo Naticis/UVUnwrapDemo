@@ -5,6 +5,12 @@ using System.Text;
 
 public class ObjExporter
 {
+    /// <summary>
+    /// Returns the mesh of the meshfilter as string.
+    /// Includes materials.
+    /// </summary>
+    /// <param name="mf">Mesh filter to convert to string</param>
+    /// <returns></returns>
     public static string MeshToString(MeshFilter mf)
     {
         Mesh m = mf.mesh;

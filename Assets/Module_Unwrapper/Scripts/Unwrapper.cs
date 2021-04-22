@@ -13,18 +13,25 @@ using Dummiesman;
 
 public class Unwrapper : MonoBehaviour
 {
-    [SerializeField]
     private UnityClient client;
+    private string fileName;
 
     [SerializeField]
     private GameObject ObjToSend;
 
     [SerializeField]
-    private string fileName;
+    private int sendingPort = 3004;
+
+    private IPAddress ipAddress;
+    private Socket clientSocket = null;
+    private IPEndPoint ipEnd;
+
+    private string fileDirectory;
 
     private void Awake()
     {
         client = GetComponent<UnityClient>();
+        fileDirectory =  Application.persistentDataPath;
     }
 
     private void Update()
@@ -39,46 +46,67 @@ public class Unwrapper : MonoBehaviour
 
     private void SendObjToServer()
     {
-        using (DarkRiftWriter writer = DarkRiftWriter.Create())
-        {
-            //  Write mesh to string, then to writer
-            ObjExporter.MeshToFile(ObjToSend.GetComponent<MeshFilter>(), fileName);
-            SendFile(fileName);
-            //byte[] bytes = Encoding.ASCII.GetBytes(ObjExporter.MeshToString(ObjToSend.GetComponent<MeshFilter>()));
-            //writer.Write(bytes);
-
-            using (Message msg = Message.Create(Tags.SendObj, writer))
-            {
-                //Send over
-                client.SendMessage(msg, SendMode.Reliable);
-                Debug.Log("Send ObjtoServer");
-            }
-        }
+        fileName = fileDirectory + "\\MeshToFile.obj";
+        ObjExporter.MeshToFile(ObjToSend.GetComponent<MeshFilter>(), fileName);
+        SendFile(fileName);
     }
 
     private void SendFile(string fn)
     {
-        IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-        IPEndPoint ipEnd = new IPEndPoint(ipAddress, 3004);
-        Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+        //Clear socket - don't ask me why :| 
+        clientSocket = null;
+        Debug.LogError("Sending file started");
 
-        string fileName = fn;// "c:\\filetosend.txt";
+        //Connect to server
+        if (clientSocket == null)
+        {
+            ipAddress = IPAddress.Parse(client.Host);
+            ipEnd = new IPEndPoint(ipAddress, sendingPort);
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            clientSocket.Connect(ipEnd);
+            Debug.LogError("Client connected");
+        }
+
+        //Encode file
+        string fileName = fn;
         byte[] fileNameByte = Encoding.ASCII.GetBytes(fileName);
         byte[] fileNameLen = BitConverter.GetBytes(fileNameByte.Length);
         byte[] fileData = File.ReadAllBytes(fileName);
         byte[] clientData = new byte[4 + fileNameByte.Length + fileData.Length];
+        //[0]filenamelen[4]filenamebyte[*]filedata     
 
         fileNameLen.CopyTo(clientData, 0);
         fileNameByte.CopyTo(clientData, 4);
         fileData.CopyTo(clientData, 4 + fileNameByte.Length);
-        clientSocket.Connect(ipEnd);
-        clientSocket.Send(clientData);
-        clientSocket.Close();
 
-        //[0]filenamelen[4]filenamebyte[*]filedata     
+        //Send
+        clientSocket.Send(clientData);
+
+        GetFile(clientSocket);
     }
 
-    public static void LoadObjFromFile(string filePath)
+    public void GetFile(Socket clientSocket)
+    {
+        Debug.Log("Getting File...");
+        byte[] clientData = new byte[1024 * 5000];
+        int receivedBytesLen = clientSocket.Receive(clientData);
+        int fileNameLen = BitConverter.ToInt32(clientData, 0);
+        string fileName = Encoding.ASCII.GetString(clientData, 4, fileNameLen);
+
+        fileName = fileDirectory + "//" + Path.GetFileName(fileName);
+
+        BinaryWriter bWrite = new BinaryWriter(File.Open(fileName, FileMode.Create));
+        bWrite.Write(clientData, 4 + fileNameLen, receivedBytesLen - 4 - fileNameLen);
+        bWrite.Close();
+        Debug.Log($"Saved File At {fileName}");
+
+        clientSocket.Shutdown(SocketShutdown.Both);
+        clientSocket.Close();
+        clientSocket = null;
+        UnityMainThreadDispatcher.Instance().Enqueue(() => LoadObjFromFile(fileName));
+    }
+
+    public void LoadObjFromFile(string filePath)
     {
         GameObject loadedObject = new OBJLoader().Load(filePath);
         Debug.LogError("Loaded object");
