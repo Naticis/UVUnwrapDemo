@@ -9,7 +9,7 @@ using System.IO;
 using System;
 using System.Net;
 using Dummiesman;
-
+using System.Threading.Tasks;
 
 public class Unwrapper : MonoBehaviour
 {
@@ -50,7 +50,8 @@ public class Unwrapper : MonoBehaviour
     {
         fileName = fileDirectory + "\\MeshToFile.obj";
         ObjExporter.MeshToFile(target.GetComponent<MeshFilter>(), fileName);
-        SendFile(fileName);
+        Task t = new Task(() => SendFile(fileName));
+        t.Start();
     }
 
     /// <summary>
@@ -60,7 +61,6 @@ public class Unwrapper : MonoBehaviour
     /// <param name="fn">File to be sent, with path, name and extension.</param>
     private void SendFile(string fn)
     {
-        Debug.Log("Time: " + Time.realtimeSinceStartup);
         Debug.LogError("Sending file started");
 
         //Connect to server
@@ -100,12 +100,12 @@ public class Unwrapper : MonoBehaviour
         Debug.Log("Getting File...");
         byte[] clientData = new byte[1024 * 5000];
         int receivedBytesLen = clientSocket.Receive(clientData);
+        Debug.Log("Getting File...2");
         int fileNameLen = BitConverter.ToInt32(clientData, 0);
         string fileName = Encoding.ASCII.GetString(clientData, 4, fileNameLen);
+        Debug.Log("Getting File...");
 
-        fileName = fileDirectory + "//" + Path.GetFileName(fileName);
-
-        Debug.Log(Application.persistentDataPath);
+        fileName = fileDirectory + "/" + Path.GetFileName(fileName);        
 
         //Write it
         BinaryWriter bWrite = new BinaryWriter(File.Open(fileName, FileMode.Create));
@@ -120,7 +120,5 @@ public class Unwrapper : MonoBehaviour
 
         //Spawn it
         UnityMainThreadDispatcher.Instance().Enqueue(() => new OBJLoader().Load(fileName));
-
-        Debug.Log("Time: " + Time.realtimeSinceStartup);
     }
 }
