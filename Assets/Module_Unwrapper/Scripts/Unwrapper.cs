@@ -10,6 +10,7 @@ using System;
 using System.Net;
 using Dummiesman;
 using System.Threading.Tasks;
+using System.Threading;
 
 public class Unwrapper : MonoBehaviour
 {
@@ -32,6 +33,7 @@ public class Unwrapper : MonoBehaviour
     {
         client = GetComponent<UnityClient>();
         fileDirectory =  Application.persistentDataPath;
+        //RealTimeUnwrapInfiniteLoop();
     }
 
     private void Update()
@@ -52,6 +54,20 @@ public class Unwrapper : MonoBehaviour
         ObjExporter.MeshToFile(target.GetComponent<MeshFilter>(), fileName);
         Task t = new Task(() => SendFile(fileName));
         t.Start();
+    }
+
+    private async void RealTimeUnwrapInfiniteLoop()
+    {
+        fileName = fileDirectory + "\\MeshToFile.obj";
+        ObjExporter.MeshToFile(ObjToSend.GetComponent<MeshFilter>(), fileName);
+        while (true)
+        {
+            await Task.Delay(2000);
+            Task t = new Task(() => SendFile(fileName));
+            t.Start();
+            if (!Application.isPlaying)
+                break;
+        }
     }
 
     /// <summary>
@@ -88,7 +104,7 @@ public class Unwrapper : MonoBehaviour
         //Send
         clientSocket.Send(clientData);
 
-        GetFile();
+        GetFile();       
     }
 
     /// <summary>

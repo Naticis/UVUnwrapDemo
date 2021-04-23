@@ -10,9 +10,6 @@
         <member name="E:DarkRift.Server.Client.MessageReceived">
             <inheritdoc/>
         </member>
-        <member name="E:DarkRift.Server.Client.StrikeOccured">
-            <inheritdoc/>
-        </member>
         <member name="P:DarkRift.Server.Client.ID">
             <inheritdoc/>
         </member>
@@ -69,12 +66,22 @@
                 The logger this client will use.
             </summary>
         </member>
+        <member name="M:DarkRift.Server.Client.Create(DarkRift.Server.NetworkServerConnection,System.UInt16,DarkRift.Server.ClientManager,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger)">
+            <summary>
+                Creates a new client connection with a given global identifier and the client they are connected through.
+            </summary>
+            <param name="connection">The connection we handle.</param>
+            <param name="id">The ID we've been assigned.</param>
+            <param name="clientManager">The client manager in charge of this client.</param>
+            <param name="threadHelper">The thread helper this client will use.</param>
+            <param name="logger">The logger this client will use.</param>
+        </member>
         <member name="M:DarkRift.Server.Client.#ctor(DarkRift.Server.NetworkServerConnection,System.UInt16,DarkRift.Server.ClientManager,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger)">
             <summary>
                 Creates a new client connection with a given global identifier and the client they are connected through.
             </summary>
             <param name="connection">The connection we handle.</param>
-            <param name="id">The ID assigned to this client.</param>
+            <param name="id">The ID we've been assigned.</param>
             <param name="clientManager">The client manager in charge of this client.</param>
             <param name="threadHelper">The thread helper this client will use.</param>
             <param name="logger">The logger this client will use.</param>
@@ -89,6 +96,11 @@
         </member>
         <member name="M:DarkRift.Server.Client.Disconnect">
             <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.Client.DropConnection">
+            <summary>
+                Disconnects the connection without invoking events for plugins.
+            </summary>
         </member>
         <member name="M:DarkRift.Server.Client.GetRemoteEndPoint(System.String)">
             <inheritdoc/>
@@ -121,12 +133,6 @@
             <param name="buffer">The buffer to push.</param>
             <param name="sendMode">The method to send the data using.</param>
             <returns>Whether the send was successful.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Client.Strike(System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Client.Strike(System.String,System.Int32)">
-            <inheritdoc/>
         </member>
         <member name="M:DarkRift.Server.Client.Strike(DarkRift.Server.StrikeReason,System.String,System.Int32)">
             <summary>
@@ -319,6 +325,11 @@
                 The clients connected to this server.
             </summary>
         </member>
+        <member name="F:DarkRift.Server.ClientManager.allocatedIds">
+            <summary>
+                The IDs of clients connecting but without objects created on the sever yet.
+            </summary>
+        </member>
         <member name="F:DarkRift.Server.ClientManager.lastIDAllocated">
             <summary>
                 The last ID allocated on this server
@@ -331,7 +342,7 @@
         </member>
         <member name="F:DarkRift.Server.ClientManager.networkListenerManager">
             <summary>
-                The server's network listener manager. Used to implement obsolete functionality.
+                The server's network listener manager.
             </summary>
         </member>
         <member name="F:DarkRift.Server.ClientManager.threadHelper">
@@ -354,10 +365,15 @@
                 Creates a new client manager.
             </summary>
             <param name="settings">The settings for this client manager.</param>
-            <param name="networkListenerManager">The server's network listener manager. Used to implement obsolete functionality.</param>
+            <param name="networkListenerManager">The server's network listener manager.</param>
             <param name="threadHelper">The thread helper the client manager will use.</param>
             <param name="logger">The logger this client manager will use.</param>
             <param name="clientLogger">The logger clients will use.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.SubscribeToListeners">
+            <summary>
+                Subscribes the client manager to all network listeners in the NetworkListenerManager.
+            </summary>
         </member>
         <member name="M:DarkRift.Server.ClientManager.GetDefaultBichannelListenerOrError">
             <summary>
@@ -371,9 +387,32 @@
             </summary>
             <param name="connection">The new client.</param>
         </member>
+        <member name="M:DarkRift.Server.ClientManager.AllocateIDToClient(System.UInt16,DarkRift.Server.Client,System.Int32@)">
+            <summary>
+                Allocates a specified ID to a client.
+            </summary>
+            <param name="id">The ID to allocate.</param>
+            <param name="client">The client to allocate the ID to.</param>
+            <param name="totalClients">The total number of clients connected.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.DeallocateID(System.UInt16)">
+            <summary>
+                Deallocates a specified ID.
+            </summary>
+            <param name="id">The ID to deallocate.</param>
+            <returns>true, if the ID was allocated; else, false.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.ReserveID">
+            <summary>
+                Allocates a new ID.
+            </summary>
+            <returns>The ID allocated for the new client.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">If the ID is already allocated.</exception>
+            <exception cref="T:System.InvalidOperationException">If there are no IDs available to allocate.</exception>
+        </member>
         <member name="M:DarkRift.Server.ClientManager.HandleDisconnection(DarkRift.Server.Client,System.Boolean,System.Net.Sockets.SocketError,System.Exception)">
             <summary>
-                Handles a client disconnecting. 
+                Handles a client disconnecting.
             </summary>
             <param name="client">The client disconnecting.</param>
             <param name="localDisconnect">If the disconnection was caused by a call to <see cref="M:DarkRift.Server.Client.Disconnect"/></param>
@@ -386,6 +425,12 @@
             </summary>
             <param name="exception">The exception causing the disconnect.</param>
             <param name="error">The SocketError causing the disconnect.</param>
+            <param name="client">The client disconnecting.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.DropClient(DarkRift.Server.Client)">
+            <summary>
+                Handles a client being dropped.
+            </summary>
             <param name="client">The client disconnecting.</param>
         </member>
         <member name="M:DarkRift.Server.ClientManager.GetAllClients">
@@ -636,109 +681,107 @@
                 The variables to inject into configuration.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.#ctor(System.Collections.Specialized.NameValueCollection)">
+        <member name="F:DarkRift.Server.ConfigurationFileHelper.configurationDocsRoot">
+            <summary>
+            Root of documentation for this configuration file.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ConfigurationFileHelper.variablesDocsPage">
+            <summary>
+            Page in documetation for variable resolution.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.#ctor(System.Collections.Specialized.NameValueCollection,System.String,System.String)">
             <summary>
                 Creates a new helper with the specified variables.
             </summary>
-            <param name="variables"></param>
+            <param name="variables">The variables to interpolate while processing the configuration file.</param>
+            <param name="configurationDocsRoot">The root of documentation for this configuration file.</param>
+            <param name="variablesDocsPage">Page in documetation for variable resolution.</param>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads an IP attribute from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The IP address read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String,System.Net.IPAddress)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttributeOrDefault(System.Xml.Linq.XElement,System.String,System.Net.IPAddress)">
             <summary>
                 Reads an IP attribute from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value if none is provided.</param>
             <returns>The IP address read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads an IP version value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The ip version read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String,DarkRift.IPVersion)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttributeOrDefault(System.Xml.Linq.XElement,System.String,DarkRift.IPVersion)">
             <summary>
                 Reads an IP version value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value if none is provided.</param>
             <returns>The ip version read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadBooleanAttribute(System.Xml.Linq.XElement,System.String,System.String,System.Boolean)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadBooleanAttribute(System.Xml.Linq.XElement,System.String,System.Boolean)">
             <summary>
                 Reads a Boolean value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The Boolean read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadByteAttribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadByteAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads a byte value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The byte read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16Attribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16Attribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads a UInt16 value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The UInt16 read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String,System.UInt16)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.UInt16)">
             <summary>
                 Reads a UInt16 value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The UInt16 read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt32AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String,System.UInt32)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt32AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.UInt32)">
             <summary>
                 Reads a UInt32 value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The UInt32 read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadStringAttribute(System.Xml.Linq.XElement,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadStringAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads a string value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
             <returns>The string read.</returns>
         </member>
         <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadStringAttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String)">
@@ -749,6 +792,23 @@
             <param name="attributeName">The name of the attribute to read.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The string read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadLogLevelsAttribute(System.Xml.Linq.XElement,System.String)">
+            <summary>
+                Reads a set of log levels from the XML element supplied.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <returns>The log levels read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadLogLevelsAttributeOrDefault(System.Xml.Linq.XElement,System.String,DarkRift.LogType[])">
+            <summary>
+                Reads a set of log levels from the XML element supplied or returns the default.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <param name="defaultValue">The default value to return if the attribute isn't present.</param>
+            <returns>The log levels read.</returns>
         </member>
         <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadAttributeCollectionTo(System.Xml.Linq.XElement,System.Collections.Specialized.NameValueCollection)">
             <summary>
@@ -767,12 +827,21 @@
             <param name="parseFunction">The function to parse each child element.</param>
             <param name="collection">The collection to write the elements to.</param>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ResolveVariables(System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ResolveVariables(System.String,System.Xml.IXmlLineInfo)">
             <summary>
                 Resolves variables to their values in the given string.
             </summary>
             <param name="str">The string to resolve variables in.</param>
+            <param name="lineInfo">The line information about where this resolution is occuring.</param>
             <returns>The resolved string.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.GetRequiredElement(System.Xml.Linq.XElement,System.String)">
+            <summary>
+            Returns a child element or throws an exception if not present.
+            </summary>
+            <param name="from">The element to load from.</param>
+            <param name="name">The name of the child element to return.</param>
+            <returns>The child element.</returns>
         </member>
         <member name="T:DarkRift.Server.DarkRiftInfo">
             <summary>
@@ -787,6 +856,11 @@
         <member name="P:DarkRift.Server.DarkRiftInfo.Version">
             <summary>
                 The version of the server.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftInfo.DocumentationRoot">
+            <summary>
+            The root URL of the server's documentation.
             </summary>
         </member>
         <member name="P:DarkRift.Server.DarkRiftInfo.Type">
@@ -873,14 +947,6 @@
                 Information about this server.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.DarkRiftServer.BadWordFilter">
-            <summary>
-                Helper plugin for filtering bad words out of text.
-            </summary>
-            <remarks>
-                Pro only.
-            </remarks>
-        </member>
         <member name="P:DarkRift.Server.DarkRiftServer.Loaded">
             <summary>
                 Whether this server has been loaded yet.
@@ -952,6 +1018,11 @@
                 Starts the server.
             </summary>
         </member>
+        <member name="M:DarkRift.Server.DarkRiftServer.StartServer">
+            <summary>
+                Starts the server propagating any exceptions raised during startup.
+            </summary>
+        </member>
         <member name="M:DarkRift.Server.DarkRiftServer.ExecuteDispatcherTasks">
             <summary>
                 Executes all tasks waiting in the dispatcher.
@@ -965,23 +1036,6 @@
                 Executes a given command on the server.
             </summary>
             <param name="command">The command to execute.</param>
-        </member>
-        <member name="M:DarkRift.Server.DarkRiftServer.CreateOneShotTimer(System.Int32,System.Action{DarkRift.Server.Timer})">
-            <summary>
-                Creates a new timer that will invoke the callback a single time.
-            </summary>
-            <param name="delay">The delay in milliseconds before invoking the callback.</param>
-            <param name="callback">The callback to invoke.</param>
-            <returns>The new timer.</returns>
-        </member>
-        <member name="M:DarkRift.Server.DarkRiftServer.CreateTimer(System.Int32,System.Int32,System.Action{DarkRift.Server.Timer})">
-            <summary>
-                Creates a new timer that will invoke the callback repeatedly until stopped.
-            </summary>
-            <param name="initialDelay">The delay in milliseconds before invoking the callback the first time.</param>
-            <param name="repetitionPeriod">The delay in milliseconds between future invocations.</param>
-            <param name="callback">The callback to invoke.</param>
-            <returns>The new timer.</returns>
         </member>
         <member name="M:DarkRift.Server.DarkRiftServer.MakeThreadSafe">
             <summary>
@@ -1028,6 +1082,41 @@
             <param name="action">The action to perform.</param>
             <param name="callback">The callback to invoke once this is complete.</param>
             <remarks>If the task was run synchronously then the argument to callback will be null as no task was created.</remarks>
+        </member>
+        <member name="M:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoff(System.Action{DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext},System.Int32,System.Action{System.Exception})">
+            <summary>
+                Exponentially backs off a task
+            </summary>
+            <param name="action">The action to try to perform.</param>
+            <param name="retries">The maximum number of retries to allow.</param>
+            <param name="failureCallback">The callback to invoke if retries are exhausted, with the last exception thrown.</param>
+        </member>
+        <member name="T:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext">
+            <summary>
+                Class containing contextual information for an exponential backoff.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.Tries">
+            <summary>
+                The number of tries attempted so far.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.MaxRetries">
+            <summary>
+                The maximum number of retries that will be attempted.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.BaseDelay">
+            <summary>
+                The delay the exponential backoff was started with.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.#ctor(System.Int32,System.Int32)">
+            <summary>
+                Creates a new ExponentialBackoffContext.
+            </summary>
+            <param name="maxRetries">The maximum number of retries that will be performed.</param>
+            <param name="baseDelay">The delay to apply of first failure.</param>
         </member>
         <member name="T:DarkRift.Server.DatabaseManager">
             <summary>
@@ -1351,12 +1440,6 @@
                 Server representation of a client.
             </summary>
         </member>
-        <member name="E:DarkRift.Server.IClient.StrikeOccured">
-            <summary>
-                Called when the client is given a strike for illegal behaviour.
-            </summary>
-            <remarks><c>Pro only.</c> </remarks>
-        </member>
         <member name="P:DarkRift.Server.IClient.ID">
             <summary>
                 The ID of the client.
@@ -1390,38 +1473,6 @@
                 <legacyBold>Setter only available in Pro.</legacyBold>
             </remarks>
         </member>
-        <member name="P:DarkRift.Server.IClient.ConnectionTime">
-            <summary>
-                The time this client connected to the server.
-            </summary>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.IClient.MessagesSent">
-            <summary>
-                The number of messages sent from the server.
-            </summary>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.IClient.MessagesPushed">
-            <summary>
-                The number of messages pushed from the server.
-            </summary>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.IClient.MessagesReceived">
-            <summary>
-                The number of messages received at the server.
-            </summary>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
         <member name="P:DarkRift.Server.IClient.RemoteEndPoints">
             <summary>
                 The collection of end points this client is connected to.
@@ -1444,25 +1495,6 @@
             </summary>
             <param name="name">The end point name.</param>
             <returns>The end point.</returns>
-        </member>
-        <member name="M:DarkRift.Server.IClient.Strike(System.String)">
-            <summary>
-                Strikes this client.
-            </summary>
-            <param name="message">A message describing the reason for the strike.</param>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.IClient.Strike(System.String,System.Int32)">
-            <summary>
-                Strikes this client.
-            </summary>
-            <param name="message">A message describing the reason for the strike.</param>
-            <param name="weight">The number of strikes this accounts for.</param>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
         </member>
         <member name="T:DarkRift.Server.IClientManager">
             <summary>
@@ -1631,15 +1663,6 @@
             </summary>
             <returns>An array of the listeners.</returns>
         </member>
-        <member name="M:DarkRift.Server.INetworkListenerManager.GetAllNetworkListeners">
-            <summary>
-                Gets all the listeners loaded into this server.
-            </summary>
-            <returns>An array of the listeners.</returns>
-            <remarks>
-                Pro only.
-            </remarks>
-        </member>
         <member name="M:DarkRift.Server.INetworkListenerManager.GetNetworkListenerByName(System.String)">
             <summary>
                 Gets the listener with the specified name.
@@ -1681,42 +1704,6 @@
                 This cannot be called during server initialization as not all plugins may 
                 have been loaded at that point, consider using the 
                 <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.IPluginManager.ActuallyGetAllPlugins">
-            <summary>
-                Gets all the plugins loaded into this server including internal ones.
-            </summary>
-            <returns>An array of the plugins.</returns>
-            <remarks>
-                Pro only.
-                
-                This cannot be called during server initialization as not all plugins may 
-                have been loaded at that point, consider using the 
-                <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.IPluginManager.GetAllPlugins">
-             <summary>
-                 Gets all the plugins loaded into this server.
-             </summary>
-             <returns>An array of the plugins.</returns>
-             <remarks>
-                 Pro only.
-            
-                 This cannot be called during server initialization as not all plugins may 
-                 have been loaded at that point, consider using the 
-                 <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
-             </remarks>
-        </member>
-        <member name="M:DarkRift.Server.IPluginManager.GetInstalledVersion(System.String)">
-            <summary>
-                Retrieves the current version of a plugin installed.
-            </summary>
-            <param name="pluginName">The name of the plugin to look up.</param>
-            <returns>The version of the plugin or null if not installed.</returns>
-            <remarks>
-                Pro only.
             </remarks>
         </member>
         <member name="M:DarkRift.Server.IPluginManager.GetPluginByName(System.String)">
@@ -1838,11 +1825,12 @@
                 Default writer for logs before log wrtiers have been setup.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.LogManager.#ctor(DarkRift.Server.DarkRiftServer)">
+        <member name="M:DarkRift.Server.LogManager.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.Server.ServerSpawnData.LoggingSettings)">
             <summary>
                 Creates a new log manager.
             </summary>
             <param name="server">The server we belong to.</param>
+            <param name="settings">The settings to load writers from.</param>
         </member>
         <member name="M:DarkRift.Server.LogManager.LoadWriters(DarkRift.Server.ServerSpawnData.LoggingSettings,DarkRift.Server.PluginFactory)">
             <summary>
@@ -1933,7 +1921,7 @@
         </member>
         <member name="T:DarkRift.Server.MessageReceivedEventArgs">
             <summary>
-                Arguments for the <see cref="E:DarkRift.Server.Client.MessageReceived"/> event.
+                Arguments for the <see cref="E:DarkRift.Server.IMessageSinkSource.MessageReceived"/> event.
             </summary>
         </member>
         <member name="P:DarkRift.Server.MessageReceivedEventArgs.SendMode">
@@ -1963,7 +1951,7 @@
         </member>
         <member name="M:DarkRift.Server.MessageReceivedEventArgs.Create(DarkRift.Message,DarkRift.SendMode,DarkRift.Server.IClient)">
             <summary>
-                Creates a new args object for the <see cref="E:DarkRift.Server.Client.MessageReceived"/> event.
+                Creates a new args object for the <see cref="E:DarkRift.Server.IMessageSinkSource.MessageReceived"/> event.
             </summary>
             <param name="message">The message received.</param>
             <param name="sendMode">The send mode the message was received with.</param>
@@ -2003,6 +1991,11 @@
         <member name="P:DarkRift.Server.NetworkListener.Port">
             <summary>
                 The port this listener is operating on.
+            </summary>
+        </member>
+        <member name="E:DarkRift.Server.NetworkListener.RegisteredConnection">
+            <summary>
+                Event fired when a new connection is registered.
             </summary>
         </member>
         <member name="M:DarkRift.Server.NetworkListener.#ctor(DarkRift.Server.NetworkListenerLoadData)">
@@ -2289,14 +2282,6 @@
                 This location may not exist if called from the constructor, use the <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
             </remarks>
         </member>
-        <member name="P:DarkRift.Server.Plugin.BadWordFilter">
-            <summary>
-                Helper plugin for filtering bad words out of text.
-            </summary>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
         <member name="M:DarkRift.Server.Plugin.#ctor(DarkRift.Server.PluginLoadData)">
             <summary>
                 Creates a new plugin using the given plugin load data.
@@ -2364,23 +2349,6 @@
                 Creates a new plugin base using the given plugin load data.
             </summary>
             <param name="pluginLoadData"></param>
-        </member>
-        <member name="M:DarkRift.Server.PluginBase.CreateOneShotTimer(System.Int32,System.Action{DarkRift.Server.Timer})">
-            <summary>
-                Creates a new timer that will invoke the callback a single time.
-            </summary>
-            <param name="delay">The delay in milliseconds before invoking the callback.</param>
-            <param name="callback">The callback to invoke.</param>
-            <returns>The new timer.</returns>
-        </member>
-        <member name="M:DarkRift.Server.PluginBase.CreateTimer(System.Int32,System.Int32,System.Action{DarkRift.Server.Timer})">
-            <summary>
-                Creates a new timer that will invoke the callback repeatedly until stopped.
-            </summary>
-            <param name="initialDelay">The delay in milliseconds before invoking the callback the first time.</param>
-            <param name="repetitionPeriod">The delay in milliseconds between future invocations.</param>
-            <param name="callback">The callback to invoke.</param>
-            <returns>The new timer.</returns>
         </member>
         <member name="M:DarkRift.Server.PluginBase.Dispose(System.Boolean)">
             <summary>
@@ -2753,259 +2721,6 @@
             <param name="name">The name of the plugin.</param>
             <param name="version">The version of the plugin currently installed.</param>
         </member>
-        <member name="T:DarkRift.Server.Plugins.Chat.BadWordFilter">
-            <inheritdoc/>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.BadWordFilter.Version">
-            <inheritdoc />
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.BadWordFilter.Commands">
-            <inheritdoc />
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.BadWordFilter.ThreadSafe">
-            <inheritdoc />
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.BadWordFilter.Hidden">
-            <inheritdoc />
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Chat.BadWordFilter.replacementSymbols">
-            <summary>
-                Symbols that can be used in the FilterToSymbols method.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Chat.BadWordFilter.listLocation">
-            <summary>
-                The location of the bad word list on the file system.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Chat.BadWordFilter.url">
-            <summary>
-                The location of the bad word list to download.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Chat.BadWordFilter.trie">
-            <summary>
-                The trie for matching bad words.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.#ctor(DarkRift.Server.PluginLoadData)">
-            <summary>
-                Creates a new bad word list plugin.
-            </summary>
-            <param name="pluginLoadData">The plugin load data from the server.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.CommandHandler(System.Object,DarkRift.Server.CommandEventArgs)">
-            <summary>
-                Handles invocation of the badwordfilter command.
-            </summary>
-            <param name="sender">The command engine.</param>
-            <param name="e">The arguments for the invocation.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.UpdateBadWordList(System.Boolean)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.ContainsBadWords(System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.FilterToChar(System.String,System.Char)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.FilterToSymbols(System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.FilterToRandomString(System.String,System.String[])">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.ReloadBadWordList">
-            <summary>
-                Reloads the regexes from the bad word list. Use <see cref="M:DarkRift.Server.Plugins.Chat.BadWordFilter.UpdateBadWordList(System.Boolean)"/> to download the latest list.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.PopulateBadWords(System.Collections.Generic.IEnumerable{System.String})">
-            <summary>
-                THis
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.BadWordFilter.Search(System.String)">
-            <summary>
-                Searches for words that are evil.
-            </summary>
-            <param name="text">The text to search.</param>
-            <returns>An iterable of words not allowed.</returns>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Chat.IBadWordFilter">
-            <summary>
-                Helper plugin for filtering bad words out of text. To access an instance use <see cref="P:DarkRift.Server.Plugin.BadWordFilter"/>.
-            </summary>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.IBadWordFilter.ContainsBadWords(System.String)">
-            <summary>
-                Analyzes if the string contains bad words or not.
-            </summary>
-            <param name="text">The string to analyze.</param>
-            <returns>Whether the string contains bad words.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.IBadWordFilter.FilterToChar(System.String,System.Char)">
-            <summary>
-                Filters a string so that all bad words are replaced with the given char.
-            </summary>
-            <param name="text">The string to filter.</param>
-            <param name="c">The char to replace bad words with.</param>
-            <returns>The filtered string.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.IBadWordFilter.FilterToRandomString(System.String,System.String[])">
-            <summary>
-                Filters a string so that all bad words are replaced with a randomly chosen string.
-            </summary>
-            <param name="text">The string to filter.</param>
-            <param name="replacements">The strings to replace bad words with.</param>
-            <returns>The filtered string.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.IBadWordFilter.FilterToSymbols(System.String)">
-            <summary>
-                Filters a string so that all bad words are replaced with random symbols.
-            </summary>
-            <param name="text">The string to filter.</param>
-            <returns>The filtered string.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.IBadWordFilter.UpdateBadWordList(System.Boolean)">
-            <summary>
-                Downloads a bad word list from the specifed location.
-            </summary>
-            <param name="logConfirmation">If true, an Info log will be written on success.</param>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Chat.Trie">
-            <summary>
-            The vanila Trie implementation.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.#ctor">
-            <summary>
-            CONSTRUCTOR
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.Trie.Count">
-            <summary>
-            Return count of words.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.Trie.IsEmpty">
-            <summary>
-            Checks if element is empty.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.Add(System.String)">
-            <summary>
-            Add word to trie
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.Remove(System.String)">
-            <summary>
-            Removes a word from the trie.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.ContainsWord(System.String,System.Int32,System.Int32)">
-            <summary>
-            Checks whether the trie has a specific word.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.ContainsPrefix(System.String)">
-            <summary>
-            Checks whether the trie has a specific prefix.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.SearchByPrefix(System.String)">
-            <summary>
-            Searches the entire trie for words that has a specific prefix.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.Clear">
-            <summary>
-            Clears this insance.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.GetEnumerator">
-            <summary>
-            IEnumerable.IEnumerator implementation.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.Trie.System#Collections#IEnumerable#GetEnumerator">
-            <summary>
-            IEnumerable.IEnumerator implementation.
-            </summary>
-            <returns>The enumerator for this instance.</returns>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Chat.TrieNode">
-            <summary>
-            The Trie Node.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.TrieNode.Key">
-            <summary>
-                The node's key.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.TrieNode.IsTerminal">
-            <summary>
-                If this trie node is a leaf node.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.TrieNode.Parent">
-            <summary>
-                The parent node of this trie node.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.TrieNode.Children">
-            <summary>
-                The child nodes of this trie node.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.#ctor(System.Char)">
-            <summary>
-                Creates a new non-leaf trie node with no children.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.#ctor(System.Char,System.Boolean)">
-            <summary>
-                Creates a new trie node with no children.
-            </summary>
-            <param name="key">This node's key.</param>
-            <param name="isTerminal">True, if this node is a leaf node.</param>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Chat.TrieNode.Word">
-            <summary>
-            Return the word at this node if the node is terminal; otherwise, return null
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.GetByPrefix">
-            <summary>
-            Returns an enumerable list of key-value pairs of all the words that start 
-            with the prefix that maps from the root node until this node.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.GetTerminalChildren">
-            <summary>
-            Returns an enumerable collection of terminal child nodes.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.Remove">
-            <summary>
-            Remove this element upto its parent.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.CompareTo(DarkRift.Server.Plugins.Chat.TrieNode)">
-            <summary>
-            IComparer interface implementation
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Chat.TrieNode.Clear">
-            <summary>
-            Clears this node instance
-            </summary>
-        </member>
         <member name="T:DarkRift.Server.Plugins.Commands.ClearCommand">
             <summary>
                 Command to clear the console window.
@@ -3086,61 +2801,6 @@
                 The rules we are following
             </summary>
         </member>
-        <member name="T:DarkRift.Server.Plugins.EntityGroup`1">
-            <summary>
-                Holds a group of entities.
-            </summary>
-            <remarks>
-                This type is not thread safe.
-            </remarks>
-            <typeparam name="T">The type of entities to contain.</typeparam>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.EntityGroup`1.Count">
-            <inheritdoc/>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.EntityGroup`1.IsReadOnly">
-            <inheritdoc/>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.EntityGroup`1.backing">
-            <summary>
-                The set backing this collection.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.#ctor">
-            <summary>
-                Creates an empty <see cref="T:DarkRift.Server.Plugins.EntityGroup`1"/>.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.#ctor(System.Collections.Generic.IEnumerable{`0})">
-            <summary>
-                Shallow copies the entities from the group provided.
-            </summary>
-            <param name="group">The group to copy elements from</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.Add(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.Clear">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.Contains(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.CopyTo(`0[],System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.GetEnumerator">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.Remove(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.System#Collections#Generic#ICollection{T}#Add(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.EntityGroup`1.System#Collections#IEnumerable#GetEnumerator">
-            <inheritdoc/>
-        </member>
         <member name="T:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck">
             <summary>
                 Implements a simple HTTP health check.
@@ -3154,6 +2814,16 @@
         <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.httpListener">
             <summary>
                 The HTTP listener in use.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.host">
+            <summary>
+                The HTTP host we are listening on.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.port">
+            <summary>
+                The HTTP port we are listening on.
             </summary>
         </member>
         <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.path">
@@ -3321,7 +2991,7 @@
             </summary>
             <param name="connection">The connection to subscribe.</param>
         </member>
-        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.SendUdpBuffer(System.Net.EndPoint,DarkRift.MessageBuffer,System.Action{System.Net.Sockets.SocketError})">
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.SendUdpBuffer(System.Net.EndPoint,DarkRift.MessageBuffer,System.Action{System.Int32,System.Net.Sockets.SocketError})">
             <summary>
                 Sends a buffer to the given endpoint using the UDP socket.
             </summary>
@@ -3508,10 +3178,11 @@
             <param name="sender"></param>
             <param name="e"></param>
         </member>
-        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.UdpSendCompleted(System.Net.Sockets.SocketError)">
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.UdpSendCompleted(System.Int32,System.Net.Sockets.SocketError)">
             <summary>
                 Called when a UDP send has completed.
             </summary>
+            <param name="bytesSent">The number of bytes sent.</param>
             <param name="e">The socket error that was returned.</param>
         </member>
         <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.UnregisterAndDisconnect(System.Net.Sockets.SocketError)">
@@ -3640,704 +3311,6 @@
             <inheritdoc/>
         </member>
         <member name="M:DarkRift.Server.Plugins.LogWriters.FileWriter.Dispose(System.Boolean)">
-            <inheritdoc/>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.GroupFormedEventArgs`1">
-            <summary>
-                Event args for the <see cref="E:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1.GroupFormed"/> event.
-            </summary>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.GroupFormedEventArgs`1.SubGroups">
-            <summary>
-                The groups of entities combined to form this group.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.GroupFormedEventArgs`1.Group">
-            <summary>
-                The group formed as a single list of entities.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.GroupFormedEventArgs`1.#ctor(System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.EntityGroup{`0}},System.Collections.Generic.IEnumerable{`0})">
-            <summary>
-                Constructor for the event args.
-            </summary>
-            <param name="subGroups">The groups queued that compose the formed group.</param>
-            <param name="group">The individual entities in the group.</param>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1">
-            <summary>
-                Base interface for all matchmaker implementations.
-            </summary>
-            <typeparam name="T">The type of entity the matchmaker operates with.</typeparam>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="E:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1.GroupFormed">
-            <summary>
-                Event invoked when a group of entities has been formed.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1.Enqueue(`0,System.EventHandler{DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs{`0}})">
-            <summary>
-                Enqueues an entity into the matchmaker.
-            </summary>
-            <param name="entity">The entity to enqueue.</param>
-            <param name="callback">The callback to make when the matchmnaking state changes for this entity, null to omit.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1.EnqueueGroup(DarkRift.Server.Plugins.EntityGroup{`0},System.EventHandler{DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs{`0}})">
-            <summary>
-                Enqueues a group of entities into the matchmaker.
-            </summary>
-            <param name="entities">The entities to enqueue.</param>
-            <param name="callback">The callback to make when the matchmnaking state changes for this entity, null to omit.</param>
-            <remarks>
-                Groups of entities enqueued using this method will be guaranteed to be placed in a room together 
-                (provided there are not more in the group than <see cref="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.EntitiesPerGroup"/>) even if they would 
-                normally rank each other under the <see cref="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.DiscardThreshold"/>).
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1.EnqueueGroup(System.Collections.Generic.IEnumerable{`0},System.EventHandler{DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs{`0}})">
-            <summary>
-                Enqueues a group of entities into the matchmaker.
-            </summary>
-            <param name="entities">The entities to enqueue.</param>
-            <param name="callback">The callback to make when the matchmnaking state changes for this entity, null to omit.</param>
-            <remarks>
-                Groups of entities enqueued using this method will be guaranteed to be placed in a room together 
-                (provided there are not more in the group than <see cref="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.EntitiesPerGroup"/>) even if they would 
-                normally rank each other under the <see cref="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.DiscardThreshold"/>).
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1.PerformFullSearch">
-            <summary>
-                Attempts to match all clients in the queue
-            </summary>
-            <remarks>
-                This will block flush all in/out queues and perform a full search. If a search is 
-                already in progress this method will block until it completes. Normallly you would 
-                perform searches from the timers already setup rather than calling this method 
-                directly.
-            </remarks>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1">
-            <summary>
-                Represents currently queued entities in a matchmaker.
-            </summary>
-            <typeparam name="T">The type of objects used as entities.</typeparam>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1.Callback">
-            <summary>
-                The event handler for state changes with this group.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1.MatchmakingState">
-            <summary>
-                The state of the entities in the matchmaker.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1.Matchmaker">
-            <summary>
-                The matchmaker this task belongs to.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1.Entities">
-            <summary>
-                The entities in this matchmaking group.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1.Cancel">
-            <summary>
-                Attempts to cancel matchmaking for this group.
-            </summary>
-            <remarks>
-                If successfully cancelled, <see cref="P:DarkRift.Server.Plugins.Matchmaking.IMatchmakerQueueTask`1.Callback"/> will be invoked with <see cref="F:DarkRift.Server.Plugins.Matchmaking.MatchmakingState.Cancelled"/>.
-            </remarks>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder">
-            <summary>
-                Helper class for generating the rankings used by the <see cref="T:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1"/>.
-            </summary>
-            <remarks>
-                This class can be used to help build up a matchmaking ranking for complex objects.
-                
-                For example, imagine we have 3 properties class, level, and highscore and we would 
-                like level to be the largest influence on ranking and prefer entities with different 
-                classes to be matched together. We can use a MinimiseDifference on both level and 
-                highscore to prefer entities with similar values and a NotEqual on our class type. 
-                To ensure level has the largest influence we might split our weighting values to 
-                0.25, 0.5, 0.25 respectively.
-                
-                It is important that the weighting of all comparisons totals 1. Without this the 
-                ranking value may exceed the 0-1 range that it should fall within and this will 
-                cause mistakes in the generated rankings.
-                
-                This is not thread safe.
-                
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Ranking">
-            <summary>
-                The ranking between the two entities.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.ranking">
-            <summary>
-                The calculated ranking.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Failed">
-            <summary>
-                Indicates that <see cref="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Fail"/> was called.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.#ctor">
-            <summary>
-                Creates a new <see cref="T:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder"/>.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MinimiseDifferenceLinear(System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-                Instructs that a better ranking would have less defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MinimiseDifferenceLinear(System.Double,System.Double,System.Double,System.Single)">
-            <summary>
-                Instructs that a better ranking would have less defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MinimiseDifferenceLinear(System.Int32,System.Int32,System.Int32,System.Single)">
-            <summary>
-                Instructs that a better ranking would have less defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MinimiseDifferenceLinear(System.Int64,System.Int64,System.Int64,System.Single)">
-            <summary>
-                Instructs that a better ranking would have less defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MaximiseDifferenceLinear(System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-                Instructs that a better ranking would have more defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MaximiseDifferenceLinear(System.Double,System.Double,System.Double,System.Single)">
-            <summary>
-                Instructs that a better ranking would have more defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MaximiseDifferenceLinear(System.Int32,System.Int32,System.Int32,System.Single)">
-            <summary>
-                Instructs that a better ranking would have more defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.MaximiseDifferenceLinear(System.Int64,System.Int64,System.Int64,System.Single)">
-            <summary>
-                Instructs that a better ranking would have more defference between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="maxDifference">The maximum difference possibel between the values. E.g. if the scale is -100 to +100, the maximum difference is 200.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Equal(System.Single,System.Single,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the same value between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Equal(System.Double,System.Double,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the same value between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Equal(System.Int32,System.Int32,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the same value between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Equal(System.Int64,System.Int64,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the same value between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Equal``1(System.IEquatable{``0},System.IEquatable{``0},System.Single)">
-            <summary>
-                Instructs that a better ranking would have the same value between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.NotEqual(System.Single,System.Single,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the difference values between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.NotEqual(System.Double,System.Double,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the difference values between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.NotEqual(System.Int32,System.Int32,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the difference values between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.NotEqual(System.Int64,System.Int64,System.Single)">
-            <summary>
-                Instructs that a better ranking would have the difference values between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.NotEqual``1(System.IEquatable{``0},System.IEquatable{``0},System.Single)">
-            <summary>
-                Instructs that a better ranking would have the same value between the two given value.
-            </summary>
-            <param name="a">The first entity's value.</param>
-            <param name="b">The second entity's value.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.IsTrue(System.Boolean,System.Single)">
-            <summary>
-                Instructs that a better ranking would hold this condition.
-            </summary>
-            <param name="b">The outcome of the condition.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.IsFalse(System.Boolean,System.Single)">
-            <summary>
-                Instructs that a better ranking would not hold this condition.
-            </summary>
-            <param name="b">The outcome of the condition.</param>
-            <param name="weight">The weighting to give this comparison.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Fail">
-            <summary>
-                Instructs that this pair should not be ranked together.
-            </summary>
-            <remarks>
-                This does not early out the ranking algorithm and instead just forces <see cref="P:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Ranking"/>
-                to return 0. Therefore it is desirable that you should immediately return from the ranking 
-                after calling this, if possible, to avoid any further unecessary computation.
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakerRankingBuilder.Clear">
-            <summary>
-                Clears the ranking and resets the builder.
-            </summary>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.MatchmakingState">
-            <summary>
-                The state of a matchmaking operation by an <see cref="T:DarkRift.Server.Plugins.Matchmaking.IMatchmaker`1"/>.
-            </summary>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.MatchmakingState.Pending">
-            <summary>
-                Indicates the matchmaking operation has not yet been passed to the matchmaker.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.MatchmakingState.Queued">
-            <summary>
-                Indicates the matchmaking operation is queued in the matchmaker.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.MatchmakingState.Success">
-            <summary>
-                Indicates the matchmakign operation succeeded.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.MatchmakingState.Cancelled">
-            <summary>
-                Indicates the matchmaking operation was cancelled.
-            </summary>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs`1">
-            <summary>
-                Event args for changes to a groups's matchmaking state.
-            </summary>
-            <typeparam name="T">The type of object being matched.</typeparam>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs`1.MatchmakingState">
-            <summary>
-                The new state of the matchmaking operation.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs`1.SubGroups">
-            <summary>
-                The sub groups the state change occured for.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs`1.Entities">
-            <summary>
-                The entities the matchmaking state change occurred for.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs`1.#ctor(DarkRift.Server.Plugins.Matchmaking.MatchmakingState,System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.EntityGroup{`0}},System.Collections.Generic.IEnumerable{`0})">
-            <summary>
-                Creates new event args with the given state.
-            </summary>
-            <param name="matchmakingState">The new matchmaking state.</param>
-            <param name="subGroups">The subgroups that the matchamking state change occured for.</param>
-            <param name="entities">The entities the matchmaking state change occurred for.</param>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.MatchRankingContext`1">
-            <summary>
-                Provides additional information about a ranking operation.
-            </summary>
-            <typeparam name="T">The type of entities being ranked.</typeparam>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.MatchRankingContext`1.DiscardThreshold">
-            <summary>
-                The threshold at which a ranking will not be considered at all.
-            </summary>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1">
-            <summary>
-                Assign entities into groups based on a ranking between them.
-            </summary>
-            <typeparam name="T">The type of object the groups are being formed for.</typeparam>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Match">
-            <summary>
-                Holder for matches with other entities.
-            </summary>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.QueueGroup">
-            <summary>
-                Information for a group in queue.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.queue">
-            <summary>
-                The list of entities in queue. Should not be edited outside of the tick method, use <see cref="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.queueSnapshot"/> instead.
-            </summary>
-            <remarks>
-                A linked list is used here instead of a queue as we need to be able to remove at an arbitrary point in case of cancellation.
-                It's just a little more advanced.
-            </remarks>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.queueSnapshot">
-            <summary>
-                The snapshot of the queue before each tick.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.inQueue">
-            <summary>
-                The entities being enqueued next flush.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.outQueue">
-            <summary>
-                The entity groups being dequeued next flush.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.DiscardThreshold">
-            <summary>
-                The threshold at which a match will be immediately discarded.
-            </summary>
-            <remarks>
-                When the matchmaker analyzes the set of entities to find possible matches it
-                calculates the suitability metric for all entity pairs. If the score
-                returned by <see cref="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.GetSuitabilityMetric(`0,`0,DarkRift.Server.Plugins.Matchmaking.MatchRankingContext{`0})"/> 
-                is below the DiscardThreshold it will not be considered any further in 
-                trimming the search tree substantially.
-                
-                Increasing this value will improve performance and memory usage but may return 
-                worse results and cause longer wait times.
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.GroupDiscardThreshold">
-            <summary>
-                The threshold at which a match will be immediately discarded.
-            </summary>
-            <remarks>
-                When the matchmaker analyzes the set of entities to find possible matches it
-                calculates the average suitability metric between each group (or group of one for 
-                individuals). If the average score calculated is below the GroupDiscardThreshold 
-                it will not be considered any further in computation therefore trimming the search tree substantially.
-                
-                Increasing this value will improve performance and memory usage but may return 
-                worse results and cause longer wait times.
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.EntitiesPerGroup">
-            <summary>
-                The number of entities to collate to form a room.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.TickPeriod">
-            <summary>
-                The time in milliseconds between full searches are carried out.
-            </summary>
-        </member>
-        <member name="E:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.GroupFormed">
-            <inheritdoc />
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.timer">
-            <summary>
-                The timer invoking <see cref="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Tick(System.Object,System.Timers.ElapsedEventArgs)"/>.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.#ctor(DarkRift.Server.PluginLoadData)">
-            <summary>
-                Creates a new RankingMatchmaker/>.
-            </summary>
-            <param name="pluginLoadData">The data to load with.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Loaded(DarkRift.Server.LoadedEventArgs)">
-            <summary>
-                Method invoked when the server is loaded.
-            </summary>
-            <param name="args">The event args.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.GetSuitabilityMetric(`0,`0,DarkRift.Server.Plugins.Matchmaking.MatchRankingContext{`0})">
-            <summary>
-                Returns a suitability metric for the given entity pair.
-            </summary>
-            <param name="entity1">The first entity.</param>
-            <param name="entity2">The second entity.</param>
-            <param name="context">Additional information about the ranking.</param>
-            <returns>A value between 0 and 1 indicating the suitability where 1 is the perfect match for each other and 0 is the worst possible match.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Enqueue(`0,System.EventHandler{DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs{`0}})">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.EnqueueGroup(System.Collections.Generic.IEnumerable{`0},System.EventHandler{DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs{`0}})">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.EnqueueGroup(DarkRift.Server.Plugins.EntityGroup{`0},System.EventHandler{DarkRift.Server.Plugins.Matchmaking.MatchmakingStateChangedEventArgs{`0}})">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.AddMatchesToQueueGroup(DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker{`0}.QueueGroup,System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker{`0}.QueueGroup},DarkRift.Server.Plugins.Matchmaking.MatchRankingContext{`0})">
-            <summary>
-                Calculates and adds matches to the given group.
-            </summary>
-            <param name="group">The group to calculate for.</param>
-            <param name="groups">The groups to calculate against.</param>
-            <param name="context">The context for the matchmaker.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Cancel(DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask{`0})">
-            <summary>
-                Cancels a given task
-            </summary>
-            <param name="task">The task to cancel.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Tick(System.Object,System.Timers.ElapsedEventArgs)">
-            <summary>
-                Performs a full search.
-            </summary>
-            <param name="sender">The timer that invoked the tick.</param>
-            <param name="args">The event arguments provided by the timer.</param>
-            <remarks>
-                !!! BEWARE !!!
-                This executes on a separate thread regardless of the threadsafe settings in DarkRift!
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.PerformFullSearch">
-            <summary>
-                Attempts to match all clients in the queue.
-            </summary>
-            <remarks>
-                This will block flush all in/out queues and perform a full search. If a search is 
-                already in progress this method will block until it completes. Normallly you would 
-                perform searches from the timers already setup rather than calling this method 
-                directly.
-            </remarks>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.FlushInQueue">
-            <summary>
-                Flushes all entities from the in queue into the matchmaker.
-            </summary>
-            <returns>The groups inserted into the queue.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.FlushOutQueue">
-            <summary>
-                Flushes all the entities in the out queue from the matchmaker.
-            </summary>
-            <returns>The groups removed from the queue.</returns>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.SnapshotQueue">
-            <summary>
-                Takes a snapshot of the queue for the enqueue method to use.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.DoFullSearch">
-            <summary>
-                Attempts to match all clients in the queue
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.InformInsertedOrRemoved(System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker{`0}.QueueGroup},DarkRift.Server.Plugins.Matchmaking.MatchmakingState)">
-            <summary>
-                Informs those who were inserted or removed from the queue.
-            </summary>
-            <param name="toInform">The groups enqueued to inform.</param>
-            <param name="newState">The new state of the groups.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.InformGroupsFormed(System.Collections.Generic.IEnumerable{System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker{`0}.QueueGroup}})">
-            <summary>
-                Informs the those in the groups that have been formed about the groups.
-            </summary>
-            <param name="toInform">The groups formed.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.PerformSearch(System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker{`0}.QueueGroup})">
-            <summary>
-                Performs a search starting at the given entity.
-            </summary>
-            <param name="startGroup">The starting group.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1.Dispose(System.Boolean)">
-            <summary>
-                Disposes this matchmaker.
-            </summary>
-            <param name="disposing">Whether the matchmaker is being disposed or not.</param>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1">
-            <summary>
-                A matchmmaker task for the <see cref="T:DarkRift.Server.Plugins.Matchmaking.RankingMatchmaker`1"/>.
-            </summary>
-            <typeparam name="T">The type of objects being used as entities.</typeparam>
-            <remarks>
-                <c>Pro only.</c>
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.Callback">
-            <inheritdoc/>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.Matchmaker">
-            <inheritdoc/>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.MatchmakingState">
-            <inheritdoc/>
-        </member>
-        <member name="P:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.Entities">
-            <inheritdoc/>
-        </member>
-        <member name="F:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.matchmaker">
-            <summary>
-                The ranking matchmater in use.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.Cancel">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.Matchmaking.RankingMatchmakerQueueTask`1.SetMatchmakingState(DarkRift.Server.Plugins.Matchmaking.MatchmakingState,System.Collections.Generic.IEnumerable{DarkRift.Server.Plugins.EntityGroup{`0}},System.Collections.Generic.IEnumerable{`0})">
-            <summary>
-                Sets the matchmaking state and invokes the callback.
-            </summary>
-            <param name="newState">The new state.</param>
-            <param name="subGroups">The subgroups now involved.</param>
-            <param name="entities">The entities now involved.</param>
-        </member>
-        <member name="T:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1">
-            <summary>
-                Holds a group of entities that implement <see cref="T:DarkRift.Server.IMessageSinkSource"/> such as <see cref="T:DarkRift.Server.IClient"/>.
-            </summary>
-            <remarks>
-                This type is not thread safe.
-            </remarks>
-            <typeparam name="T">The type of entities to contain.</typeparam>
-        </member>
-        <member name="E:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.MessageReceived">
-            <inheritdoc />
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.#ctor">
-            <summary>
-                Creates an empty <see cref="T:DarkRift.Server.Plugins.EntityGroup`1"/>.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.#ctor(System.Collections.Generic.IEnumerable{`0})">
-            <summary>
-                Shallow copies the entities from the group provided.
-            </summary>
-            <param name="group">The group to copy elements from</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.Add(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.Clear">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.Remove(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.MessageReceivedHandler(System.Object,DarkRift.Server.MessageReceivedEventArgs)">
-            <summary>
-                Handles a message received from any group memeber.
-            </summary>
-            <param name="sender">The group member that sent it.</param>
-            <param name="e">The event args.</param>
-        </member>
-        <member name="M:DarkRift.Server.Plugins.MessageSinkSourceEntityGroup`1.SendMessage(DarkRift.Message,DarkRift.SendMode)">
             <inheritdoc/>
         </member>
         <member name="T:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor">
@@ -4476,6 +3449,11 @@
                 Indcates an <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> did not get recycled properly.
             </summary>
         </member>
+        <member name="M:DarkRift.Server.ServerObjectCacheHelper.ResetCounters">
+            <summary>
+                Resets all counters to 0.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.ServerObjectCacheSettings">
             <summary>
                 Configuration for the <see cref="T:DarkRift.Server.ServerObjectCache"/>.
@@ -4536,6 +3514,16 @@
                 The settings for the server's listeners.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistry">
+            <summary>
+                The settings for the server regirsty.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.Metrics">
+            <summary>
+                The settings for the metrics writer plugins and general metrics.
+            </summary>
+        </member>
         <member name="P:DarkRift.Server.ServerSpawnData.EventsFromDispatcher">
             <summary>
                 Whether events are executed through the dispatcher or not.
@@ -4579,6 +3567,11 @@
         <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.UseFallbackNetworking">
             <summary>
                 Whether the fallback networking system should be used for compatability with Unity.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.ReconnectAttempts">
+            <summary>
+                The number of times to try to reconnect to a server before considering it unconnectable.
             </summary>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.ServerSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
@@ -4660,6 +3653,11 @@
                 The log writers to use.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.LoggingSettings.StartupLogLevels">
+            <summary>
+                Log levels to log out to console before log writers are loaded.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.ServerSpawnData.LoggingSettings.LogWriterSettings">
             <summary>
                 Holds settings about a log writer.
@@ -4696,13 +3694,6 @@
             </summary>
             <param name="element">The XML element to load from.</param>
             <param name="helper">The XML configuration helper being used.</param>
-        </member>
-        <member name="M:DarkRift.Server.ServerSpawnData.LoggingSettings.LogWriterSettings.ParseLogType(System.String)">
-            <summary>
-                Parses a string to a log type.
-            </summary>
-            <param name="logType">The type to parse</param>
-            <returns>The parsed type.</returns>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.LoggingSettings.#ctor">
             <summary>
@@ -4748,7 +3739,7 @@
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.PluginsSettings.PluginSettings.Settings">
             <summary>
-                Settings that should be loaded for this writer.
+                Settings that should be loaded for this plugin.
             </summary>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.PluginsSettings.PluginSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
@@ -4920,6 +3911,109 @@
             <param name="element">The XML element to load from.</param>
             <param name="helper">The XML configuration helper being used.</param>
         </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.MetricsSettings">
+            <summary>
+                Holds settings related to loading the metrics system.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriter">
+            <summary>
+                The metrics writer to use.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.EnablePerMessageMetrics">
+            <summary>
+                Whether to enable metrics that get emitted per message.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings">
+            <summary>
+                Holds settings about a metrics writer.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings.Type">
+            <summary>
+                The type of plugin.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings.Settings">
+            <summary>
+                Settings that should be loaded for this metrics writer.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the metrics writer settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.MetricsSettings.#ctor">
+            <summary>
+                Creates a new MetricsSettings object.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.MetricsSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the metrics settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.ServerRegistrySettings">
+            <summary>
+                Holds settings related to loading the server registry.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnector">
+            <summary>
+                The server registry connector to use.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.AdvertisedHost">
+            <summary>
+                The host the server is advertised on.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.AdvertisedPort">
+            <summary>
+                The port the server is advertised on.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings">
+            <summary>
+                Holds settings about a server registry connector.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings.Type">
+            <summary>
+                The type of plugin.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings.Settings">
+            <summary>
+                Settings that should be loaded for this server registry connector.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the server registry connector settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.#ctor">
+            <summary>
+                Creates a new ServerRegistrySettings object.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the server registry settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
         <member name="M:DarkRift.Server.ServerSpawnData.CreateFromXml(System.String,System.Collections.Specialized.NameValueCollection)">
             <summary>
                 Creates a server spawn data from specified XML configuration file.
@@ -4948,53 +4042,6 @@
             <param name="address">The address the server should listen on.</param>
             <param name="port">The port the server should listen on.</param>
             <param name="ipVersion">The IP protocol the server should listen on.</param>
-        </member>
-        <member name="T:DarkRift.Server.StrikeEventArgs">
-            <summary>
-                Event arguments for the <see cref="E:DarkRift.Server.Client.StrikeOccured"/> event.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.StrikeEventArgs.Reason">
-            <summary>
-                The reason the strike was given.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.StrikeEventArgs.Message">
-            <summary>
-                The message supplied with the strike.
-            </summary>
-            <remarks>
-                May be null in the case that no message is supplied.
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.StrikeEventArgs.Forgiven">
-            <summary>
-                Has this strike been forgiven by a plugin?
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.StrikeEventArgs.Weight">
-            <summary>
-                The number of strikes this accounts for.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.StrikeEventArgs.#ctor(DarkRift.Server.StrikeReason,System.String,System.Int32)">
-            <summary>
-                Creates a new StrikeEventArgs object.
-            </summary>
-            <param name="reason">The reason for the strike.</param>
-            <param name="message">The message supplied with the strike.</param>
-            <param name="weight">The weight of the strike.</param>
-        </member>
-        <member name="M:DarkRift.Server.StrikeEventArgs.Forgive">
-            <summary>
-                Forgives the client of this strike so it will not count against them.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.StrikeEventArgs.SetWeight(System.Int32)">
-            <summary>
-                Set the weight of the strike.
-            </summary>
-            <exception cref="T:System.ArgumentException">If the weight is set to a negative or zero value.</exception>
         </member>
         <member name="T:DarkRift.Server.StrikeReason">
             <summary>
@@ -5031,61 +4078,12 @@
                 Specifies a client sent a ping acknowledgment with too long a total RTT.
             </summary>
         </member>
-        <member name="T:DarkRift.Server.Timer">
+        <member name="M:DarkRift.Server.StringUtility.Format(System.Collections.Generic.IEnumerable{System.Net.IPEndPoint})">
             <summary>
-                A timer for delaying execution or one-shot or repetative tasks.
+                Formats a list of IPEndPoints nicely seperated by pipe characters.
             </summary>
-            <remarks>
-                <c>Pro only.</c> 
-            </remarks>
-        </member>
-        <member name="P:DarkRift.Server.Timer.IsOneShot">
-            <summary>
-                Whether the timer is a one-shot timer.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.Timer.Callback">
-            <summary>
-                The callback to invoke when the timer completes.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Timer.timer">
-            <summary>
-                The backing timer.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.Timer.threadHelper">
-            <summary>
-                The thread helper to use.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.Timer.#ctor(DarkRift.Server.DarkRiftThreadHelper,System.Int32,System.Action{DarkRift.Server.Timer})">
-            <summary>
-                Creates a new timer that will invoke the callback a single time.
-            </summary>
-            <param name="threadHelper">The thread helper to use.</param>
-            <param name="delay">The delay in milliseconds before invoking the callback.</param>
-            <param name="callback">The callback to invoke.</param>
-        </member>
-        <member name="M:DarkRift.Server.Timer.#ctor(DarkRift.Server.DarkRiftThreadHelper,System.Int32,System.Int32,System.Action{DarkRift.Server.Timer})">
-            <summary>
-                Creates a new timer that will invoke the callback repeatedly until stopped.
-            </summary>
-            <param name="threadHelper">The thread helper to use.</param>
-            <param name="initialDelay">The delay in milliseconds before invoking the callback the first time.</param>
-            <param name="repetitionPeriod">The delay in milliseconds between future invocations.</param>
-            <param name="callback">The callback to invoke.</param>
-        </member>
-        <member name="M:DarkRift.Server.Timer.InvokeCallback(System.Object)">
-            <summary>
-                Invokes the callback.
-            </summary>
-            <param name="_">Unused.</param>
-        </member>
-        <member name="M:DarkRift.Server.Timer.Dispose">
-            <summary>
-                Disposes of the timer and cancels all future invocations.
-            </summary>
+            <param name="endPoints">The end points to format.</param>
+            <returns>The formatted string.</returns>
         </member>
         <member name="T:DarkRift.Server.UpgradeEventArgs">
             <summary>
@@ -5167,17 +4165,31 @@
                 An exception raised for invalid XML configuration files.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String)">
+        <member name="P:DarkRift.Server.XmlConfigurationException.DocumentationLink">
+            <summary>
+            The location of documentation for this issue.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.XmlConfigurationException.LineInfo">
+            <summary>
+            The line information about where this issue is.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String,System.String,System.Xml.IXmlLineInfo)">
             <summary>
                 Create and new exception for XML configurations with a message.
             </summary>
             <param name="msg">The message for the exception.</param>
+            <param name="documentationLink">The location of documentation for this issue.</param>
+            <param name="lineInfo">The line information about where this issue is.</param>
         </member>
-        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String,System.Exception)">
+        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String,System.String,System.Xml.IXmlLineInfo,System.Exception)">
             <summary>
                 Create and new exception for XML configurations with a message and inner exception.
             </summary>
             <param name="msg">The message for the exception.</param>
+            <param name="documentationLink">The location of documentation for this issue.</param>
+            <param name="lineInfo">The line information about where this issue is.</param>
             <param name="innerException">The inner exception.</param>
         </member>
     </members>

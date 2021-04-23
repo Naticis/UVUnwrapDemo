@@ -291,6 +291,11 @@
                 Indcates an <see cref="T:DarkRift.Client.MessageReceivedEventArgs"/> did not get recycled properly.
             </summary>
         </member>
+        <member name="M:DarkRift.Client.ClientObjectCacheHelper.ResetCounters">
+            <summary>
+                Resets all counters to 0.
+            </summary>
+        </member>
         <member name="T:DarkRift.Client.ClientObjectCacheSettings">
             <summary>
                 Configuration for the <see cref="T:DarkRift.Client.ClientObjectCache"/>.
@@ -528,7 +533,7 @@
                 Handles a message received.
             </summary>
             <param name="message">The message that was received.</param>
-            <param name="sendMode">The send mode the emssage was received with.</param>
+            <param name="sendMode">The send mode the message was received with.</param>
         </member>
         <member name="M:DarkRift.Client.DarkRiftClient.DisconnectedHandler(System.Net.Sockets.SocketError,System.Exception)">
             <summary>
@@ -547,6 +552,37 @@
                 Handles disposing of the DarkRift client object.
             </summary>
             <param name="disposing"></param>
+        </member>
+        <member name="T:DarkRift.Client.DarkRiftConnectionException">
+            <summary>
+            Exception thrown when a DarkRift client is unable to establish a connection to the server.
+            </summary>
+            <remarks>
+                This exception is here to provide more information about the operation the client
+                was performing during at the point of connection failure rather than a non-descript
+                <see cref="T:System.Net.Sockets.SocketException"/>. In general you should prefer catching a
+                <see cref="T:System.Net.Sockets.SocketException"/> over this as not all failures may be emitted as a
+                <see cref="T:DarkRift.Client.DarkRiftConnectionException"/>.
+            </remarks>
+        </member>
+        <member name="P:DarkRift.Client.DarkRiftConnectionException.InnerSocketException">
+            <summary>
+            The inner <see cref="T:System.Net.Sockets.SocketException"/> that caused this exception.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Client.DarkRiftConnectionException.#ctor(System.String,System.Net.Sockets.SocketException)">
+            <summary>
+            Creates a new <see cref="T:DarkRift.Client.DarkRiftConnectionException"/>.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">The <see cref="T:System.Net.Sockets.SocketException"/> that caused this exception.</param>
+        </member>
+        <member name="M:DarkRift.Client.DarkRiftConnectionException.#ctor(System.String,System.Net.Sockets.SocketError)">
+            <summary>
+            Creates a new <see cref="T:DarkRift.Client.DarkRiftConnectionException"/>.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="socketError">The <see cref="T:System.Net.Sockets.SocketError"/> that caused this exception.</param>
         </member>
         <member name="T:DarkRift.Client.DisconnectedEventArgs">
             <summary>
@@ -649,11 +685,19 @@
                 A connection to a remote server.
             </summary>
         </member>
+        <member name="T:DarkRift.Client.NetworkClientConnection.MessageReceviedHandler">
+            <summary>
+                Delegate for handling messages.
+            </summary>
+            <param name="messageBuffer">The message buffer received.</param>
+            <param name="sendMode">The send mode the message was received with.</param>
+        </member>
         <member name="T:DarkRift.Client.NetworkClientConnection.DisconnectedHandler">
             <summary>
                 Delegate for handling disconnections.
             </summary>
             <param name="socketError">The socket error that caused the disconnection.</param>
+            <param name="exception">The exception that caused the disconnection.</param>
         </member>
         <member name="P:DarkRift.Client.NetworkClientConnection.MessageReceived">
             <summary>

@@ -219,12 +219,12 @@
         </member>
         <member name="F:DarkRift.CommandCode.Configure">
             <summary>
-                A configuration packet to a client.
+                A identification packet presenting a new ID to a client.
             </summary>
         </member>
-        <member name="F:DarkRift.CommandCode.ClientAssign">
+        <member name="F:DarkRift.CommandCode.Identify">
             <summary>
-                A new client was assigned to the server.
+                An identification packet presenting a preknown ID to server.
             </summary>
         </member>
         <member name="T:DarkRift.ConnectionState">
@@ -298,6 +298,11 @@
         <member name="P:DarkRift.DarkRiftReader.Position">
             <summary>
                 The number of bytes read so far.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftReader.deserializeEventSingleton">
+            <summary>
+                A singleton event that exists with this reader for deserializing IDarkRiftSerializables.
             </summary>
         </member>
         <member name="F:DarkRift.DarkRiftReader.singleCharArray">
@@ -686,6 +691,11 @@
         <member name="F:DarkRift.DarkRiftWriter.singleCharArray">
             <summary>
                 An array of a single char for caching.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftWriter.serializeEventSingleton">
+            <summary>
+                A singleton event that exists with this writer for serializing IDarkRiftSerializables.
             </summary>
         </member>
         <member name="F:DarkRift.DarkRiftWriter.buffer">
@@ -1660,6 +1670,7 @@
             <summary>
                 Indicates whether this message is a command message or not.
             </summary>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
         <member name="P:DarkRift.Message.IsPingMessage">
             <summary>
@@ -1690,6 +1701,7 @@
             <summary>
                 The tag of the message.
             </summary>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
         <member name="P:DarkRift.Message.PingCode">
             <summary>
@@ -1761,6 +1773,7 @@
                 Serializes a <see cref="T:DarkRift.DarkRiftWriter"/> into the data of this message.
             </summary>
             <param name="writer">The writer to serialize.</param>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
         <member name="M:DarkRift.Message.Deserialize``1">
             <summary>
@@ -1774,12 +1787,14 @@
                 Serializes an object into the data of this message.
             </summary>
             <param name="obj">The object to serialize.</param>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
         <member name="M:DarkRift.Message.Serialize``1(``0)">
             <summary>
                 Serializes an object into the data of this message.
             </summary>
             <param name="obj">The object to serialize.</param>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
         <member name="M:DarkRift.Message.MakePingMessage">
             <summary>
@@ -1790,6 +1805,7 @@
             <summary>
                 Makes this a ping acknowledgement message for the given ping message.
             </summary>
+            <exception cref="T:System.ArgumentException">If the message passed is not a ping message.</exception>
         </member>
         <member name="M:DarkRift.Message.ToBuffer">
             <summary>
@@ -1857,9 +1873,9 @@
         </member>
         <member name="M:DarkRift.MessageBuffer.Create(System.Int32)">
             <summary>
-                Creates a new message buffer with a given minimum size.
+                Creates a new message buffer with a given minimum capacity in the backing buffer.
             </summary>
-            <param name="minSize">The minimum number of bytes in the buffer.</param>
+            <param name="minCapacity">The minimum number of bytes in the buffer.</param>
             <returns>The new message buffer.</returns>
         </member>
         <member name="M:DarkRift.MessageBuffer.Clone">
@@ -2131,6 +2147,11 @@
         <member name="M:DarkRift.ObjectCacheHelper.ActionDispatcherTaskWasFinalized">
             <summary>
                 Indcates an <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.ResetCounters">
+            <summary>
+                Resets all counters to 0.
             </summary>
         </member>
         <member name="T:DarkRift.ObjectCacheSettings">
